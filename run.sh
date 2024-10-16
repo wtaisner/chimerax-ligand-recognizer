@@ -12,5 +12,6 @@ rm -rf build dist ChimeraX_HelloWorld.egg-info
 chimerax --nogui --cmd 'devel build . exit true'
 # install the package
 chimerax --nogui --cmd 'devel install . exit true'
-# run the command
-chimerax --nogui --cmd 'blobus validatus 8SOR/map_model_difference_1.ccp4'
+
+# test the command: first open the structure and the map, then run the command:
+chimerax --nogui --cmd 'open 8SOR/8sor.cif; open 8SOR/map_model_difference_1.ccp4; blobus validatus /R:101'
