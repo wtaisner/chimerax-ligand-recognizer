@@ -10,12 +10,11 @@ will be displayed without the ChimeraX- prefix.
   	    minSessionVersion="1" maxSessionVersion="1">
 
   <!-- Additional information about bundle source -->
-  <Author>UCSF RBVI</Author>
-  <Email>chimerax@cgl.ucsf.edu</Email>
-  <URL>https://www.rbvi.ucsf.edu/chimerax/</URL>
+  <Author>Witold Taisner, Anna Przybyłowska, Jacek Karolczak, Dariusz Brzeziński</Author>
+  <Email>taisner.witold@gmail.com</Email>
+  <URL>https://github.com/wtaisner/chimerax-density-map-classification</URL>
 
-  <!-- Synopsis is a one-line description
-       Description is a full multi-line description -->
+  <!-- Synopsis is a one-line description is a full multi-line description -->
   <Synopsis>Basic example for adding a command</Synopsis>
   <Description>Basic example code for implementing ChimeraX bundle.
 
@@ -30,6 +29,11 @@ Implements command "hello" to print the string "hello world" in the log.
   <!-- Dependencies on other ChimeraX/Python packages -->
   <Dependencies>
     <Dependency name="ChimeraX-Core" version="~=1.1"/>
+    <Dependency name="numpy"/>
+    <Dependency name="scipy"/>
+    <Dependency name="pandas"/>
+    <Dependency name="biopython"/>
+    <Dependency name="mrcfile"/>
   </Dependencies>
 
   <!-- Python and ChimeraX-specific classifiers
@@ -49,7 +53,7 @@ Implements command "hello" to print the string "hello world" in the log.
     <PythonClassifier>Development Status :: 3 - Alpha</PythonClassifier>
     <PythonClassifier>License :: Freeware</PythonClassifier>
     <!-- ChimeraX classifiers describe supplied functionality -->
-    <ChimeraXClassifier>ChimeraX :: Command :: blobus recognitus :: General ::
+    <ChimeraXClassifier>ChimeraX :: Command :: blobus validatus :: General ::
 	predicts class of a ligand </ChimeraXClassifier>
   </Classifiers>
 

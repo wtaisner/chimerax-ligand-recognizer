@@ -1,5 +1,3 @@
-# vim: set expandtab shiftwidth=4 softtabstop=4:
-
 from chimerax.core.toolshed import BundleAPI
 
 
@@ -28,7 +26,7 @@ class _MyAPI(BundleAPI):
         # synopsis from bundle_info.xml if none is supplied
         # by the code.
         from . import cmd
-        if ci.name == 'blobus recognitus':
+        if ci.name == 'blobus validatus':
             func = cmd.predict_class
             desc = cmd.blob_desc
         else:
