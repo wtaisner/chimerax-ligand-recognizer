@@ -26,7 +26,7 @@ class _MyAPI(BundleAPI):
         # synopsis from bundle_info.xml if none is supplied
         # by the code.
         from . import cmd
-        if ci.name == 'blobus validatus':
+        if ci.name == "blobus validatus" or ci.name == "blob validate":
             func = cmd.validate_class
             desc = cmd.blob_validate_desc
         else:

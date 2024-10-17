@@ -1,8 +1,8 @@
+"""Adapted from https://github.com/dabrze/cryo-em-ligand-cutter/tree/main"""
 from math import sqrt
 
-import scipy as sp  # type: ignore
 import numpy as np
-from babel.messages.extract import extract
+import scipy as sp  # type: ignore
 from scipy import signal
 from scipy.stats import mode, norm  # type: ignore
 
@@ -258,19 +258,19 @@ def extract_ligand(
             # rescaling density values
             blob = blob * (MAP_VALUE_MAPPER[resolution] / blob[blob > 0].min())
 
-            print(
-                f"Dimensions: {blob.shape}, Blob min value: {blob[blob > 0].min():.3f}, "
-                + f"Blob max value: {blob.max():.3f}, Non-zero: {np.sum(blob != 0):,}, "
-                + f"Zero: {np.sum(blob == 0):,}, NA count: {np.sum(np.isnan(blob)):,}, "
-                + f"Blob volume: {blob_volume:.3f}, Model coverage: {res_cov_frac:.2f}, "
-                + f"Blob coverage: {blob_cov_frac:.2f}"
-            )
+            # print(
+            #     f"Dimensions: {blob.shape}, Blob min value: {blob[blob > 0].min():.3f}, "
+            #     + f"Blob max value: {blob.max():.3f}, Non-zero: {np.sum(blob != 0):,}, "
+            #     + f"Zero: {np.sum(blob == 0):,}, NA count: {np.sum(np.isnan(blob)):,}, "
+            #     + f"Blob volume: {blob_volume:.3f}, Model coverage: {res_cov_frac:.2f}, "
+            #     + f"Blob coverage: {blob_cov_frac:.2f}"
+            # )
             return blob
         else:
-            print(
-                f"Model coverage: {res_cov_frac:.2f}, "
-                + f"Blob coverage: {blob_cov_frac:.2f}. Not enough coverage."
-            )
+            # print(
+            #     f"Model coverage: {res_cov_frac:.2f}, "
+            #     + f"Blob coverage: {blob_cov_frac:.2f}. Not enough coverage."
+            # )
             return None
     else:
         print(f"Not enough density.")
