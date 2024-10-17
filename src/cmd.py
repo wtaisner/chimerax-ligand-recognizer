@@ -2,7 +2,7 @@ import tempfile
 
 import numpy as np
 import requests
-from chimerax.core.commands import CmdDesc, StringArg, BoolArg, FloatArg, run
+from chimerax.core.commands import CmdDesc, StringArg, run
 
 from .cryoem_utils import cut_ligand
 
@@ -22,6 +22,7 @@ def pretty_print_predictions(predictions: list[dict[str, float]]) -> None:
         print(f"{ligand_class:30} | Probability: {probability:.3f}")
     print("=" * 30)
 
+
 def validate_class(session, ligand_id) -> None:
     """ Prepare the ligand for the API and send it to the for validation.
 
@@ -33,7 +34,7 @@ def validate_class(session, ligand_id) -> None:
     # Loop through models to find the PDB structure and extract the relevant information
     for i, model in enumerate(models):
         if (
-            model.opened_data_format and model.opened_data_format.name == "mmCIF"
+                model.opened_data_format and model.opened_data_format.name == "mmCIF"
         ):  # Check if the model is a PDB structure, hopefully
 
             # Check if there is more than one PDB structure in the session
@@ -49,8 +50,8 @@ def validate_class(session, ligand_id) -> None:
                 print(f"Residue {ligand_id} not found in the structure. Please provide a valid id.")
                 residue = None
         elif (
-            model.opened_data_format
-            and model.opened_data_format.name == "CCP4 density map"
+                model.opened_data_format
+                and model.opened_data_format.name == "CCP4 density map"
         ):  # Check if the model is a density map, hopefully.
             map_model = model
 
@@ -75,7 +76,8 @@ def validate_class(session, ligand_id) -> None:
             results = r.json()
             pretty_print_predictions(results['predictions'])
 
+
 # CmdDesc contains the command description. It is used to register the command with ChimeraX.
 blob_validate_desc = CmdDesc(
-    required=[("ligand_id", StringArg)],
+    required=[("ligand_id", StringArg)]
 )
