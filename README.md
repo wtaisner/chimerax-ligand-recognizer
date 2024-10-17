@@ -8,7 +8,6 @@ This bundle provides tools for classifying density maps in ChimeraX. Refer to `b
 This work is based on [this repository](https://github.com/jkarolczak/ligand-classification) and the corresponding publication.
 
 ## Usage
-Usage:
 This tool assumes, that both PDB structure and density map are loaded into ChimeraX.
 i.e. `open 8SOR/8sor.cif; open 8SOR/map_model_difference_1.ccp4;`
 Then, it can be run from the command line by pointing to a specific ligand in the PDB structure.
@@ -16,6 +15,20 @@ Then, it can be run from the command line by pointing to a specific ligand in th
 The tool implements new commands:
 - blob validate CHAIN: validates class of a ligand -- (e.g. `blob validate /A:1401`)
 - blobus validatus: validates class of a ligand but with more magic involved (functionality is the same though) -- (e.g. `blobus validatus /A:1401`)
+
+## Installation
+
+TODO: add from toolshed once it's available.
+
+You can install the bundle manually by downloading the repository and running the following commands in the repository directory:
+```bash
+# set ChimeraX alias -- change this to your ChimeraX path
+alias chimerax=/usr/bin/chimerax
+# build the package
+chimerax --nogui --cmd 'devel build . exit true'
+# install the package
+chimerax --nogui --cmd 'devel install . exit true'
+```
 
 ## Citation
 ```bibtex
