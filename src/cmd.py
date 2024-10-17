@@ -1,47 +1,62 @@
+import tempfile
+
+import numpy as np
 import requests
-from chimerax.core.commands import CmdDesc, StringArg, BoolArg, FloatArg
+from chimerax.core.commands import CmdDesc, StringArg, BoolArg, FloatArg, run
+
+from .cryoem_utils import cut_ligand
 
 
-def predict_class(session, file_path, rescale_cryoem=False, resolution=1.0):
-    # TODO: change file_path to chain or whatever
+def validate_class(session, ligand_id):
 
-    models = session.models.list() # get all models in the session
+    models = session.models.list()  # get all models in the session
+    cif_model, map_model, residue = None, None, None
     # Loop through models to find the PDB structure and extract the relevant information
     for i, model in enumerate(models):
-        # print(i, model, dir(model)) # throw output of dir into ChatGPT to see if there's anything useful
+        if (
+            model.opened_data_format and model.opened_data_format.name == "mmCIF"
+        ):  # Check if the model is a PDB structure, hopefully
+            cif_model = model
+            try:
+                residue_command = f"select {ligand_id}"
+                residue = run(session, residue_command)
+            except Exception:
+                residue = None
+        elif (
+            model.opened_data_format
+            and model.opened_data_format.name == "CCP4 density map"
+        ):  # Check if the model is a density map, hopefully.
+            map_model = model
+
         print("=====================================")
-        if model.opened_data_format and model.opened_data_format.name == "mmCIF": # Check if the model is a PDB structure, hopefully
-            pdb_id = model.name  # PDB ID or name of the model
-            chains = model.chains  # List of chains in the PDB
-            print(f"PDB ID: {pdb_id}")
-            for chain in chains:
-                print(f"Chain: id: {chain.chain_id}, structure: {chain.structure}, full name: {chain.full_name}")
-        elif model.opened_data_format and model.opened_data_format.name == "CCP4 density map": # Check if the model is a density map, hopefully.
-            print(dir(model.data))
-            print(model.data.mrc_data)
-        else: # opened_data_format is None
-            print("??")
-
+    if map_model is None:
+        print("Could not find density map")
+    elif cif_model is None:
+        print("Could not find cif file")
+    elif residue is None:
+        print(f"Incorrect ligand id: {ligand_id}")
+    else:
+        blob = cut_ligand(map_model, cif_model, residue)
+        if blob is None:
+            print("Could not cut ligand")
+        else:
+            url = "https://ligands.cs.put.poznan.pl/api/predict"
+            params = {"rescale_cryoem": False}
+            with tempfile.NamedTemporaryFile(suffix=".npz", delete=True) as tmp_file:
+                np.savez_compressed(tmp_file, blob)
+                tmp_file.seek(0)
+                r = requests.post(url, files={"file": tmp_file}, data=params)
+            results = r.json()
+            print(results)
     # TODO: handle the case where there are multiple PDB structures in the session??
-
-
-    # API call
-    # url = 'https://ligands.cs.put.poznan.pl/api/predict'
-    # params = {
-    #     'rescale_cryoem': rescale_cryoem,
-    #     'resolution': resolution,
-    # }
-    # print(f'loading files {file_path}')
-    # with open(file_path, 'rb') as ligand:
-    #     session.logger.info('yep')
-    #     r = requests.post(url, files={'file': ligand}, data=params)
-    # results = r.json()
-    # print(results)
 
 
 # CmdDesc contains the command description.  For the
 # "hello" command, we expect no arguments.
-blob_desc = CmdDesc(required=[("file_path", StringArg)],
-                    optional=[("rescale_cryoem", BoolArg),
-                              ('resolution', FloatArg),
-                              ], )
+blob_validate_desc = CmdDesc(
+    required=[("ligand_id", StringArg)],
+    optional=[
+        ("rescale_cryoem", BoolArg),
+        ("resolution", FloatArg),
+    ],
+)

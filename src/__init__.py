@@ -27,8 +27,8 @@ class _MyAPI(BundleAPI):
         # by the code.
         from . import cmd
         if ci.name == 'blobus validatus':
-            func = cmd.predict_class
-            desc = cmd.blob_desc
+            func = cmd.validate_class
+            desc = cmd.blob_validate_desc
         else:
             raise ValueError("trying to register unknown command: %s" % ci.name)
         if desc.synopsis is None:
@@ -37,8 +37,7 @@ class _MyAPI(BundleAPI):
         # We then register the function as the command callback
         # with the chimerax.core.commands module.
         # Note that the command name registered is not hardwired,
-        # but actually comes from bundle_info.xml.  In this example,
-        # the command name is "hello", not "hello world".
+        # but actually comes from bundle_info.xml.
         from chimerax.core.commands import register
         register(ci.name, desc, func)
 
