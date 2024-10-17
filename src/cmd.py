@@ -38,15 +38,15 @@ def validate_class(session, ligand_id) -> None:
 
             # Check if there is more than one PDB structure in the session
             if cif_model is not None:
-                print("Multiple PDB structures found in the session")
-                raise ValueError("Multiple PDB structures found in the session. Make sure only one PDB structure is open.")
+                print("Multiple PDB structures found in the session. Make sure only one PDB structure is open.")
             else:
                 cif_model = model
 
             try:
                 residue_command = f"select {ligand_id}"
                 residue = run(session, residue_command)
-            except Exception(f"Residue {ligand_id} not found in the structure. Please provide a valid id."):
+            except Exception:
+                print(f"Residue {ligand_id} not found in the structure. Please provide a valid id.")
                 residue = None
         elif (
             model.opened_data_format
@@ -55,11 +55,11 @@ def validate_class(session, ligand_id) -> None:
             map_model = model
 
     if map_model is None:
-        raise ValueError("Could not find density map. Please open a density map.")
+        print("Could not find density map. Please open a density map.")
     elif cif_model is None:
-        raise ValueError("Could not find PDB structure. Please open a PDB structure.")
+        print("Could not find PDB structure. Please open a PDB structure.")
     elif residue is None:
-        raise ValueError("Could not find ligand. Please provide a valid ligand id.")
+        print("Could not find ligand. Please provide a valid ligand id.")
     else:
         print("Attempting to cut ligand...")
         blob = cut_ligand(map_model, cif_model, residue)
@@ -78,8 +78,4 @@ def validate_class(session, ligand_id) -> None:
 # CmdDesc contains the command description. It is used to register the command with ChimeraX.
 blob_validate_desc = CmdDesc(
     required=[("ligand_id", StringArg)],
-    optional=[
-        ("rescale_cryoem", BoolArg),
-        ("resolution", FloatArg),
-    ],
 )
