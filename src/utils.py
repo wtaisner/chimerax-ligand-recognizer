@@ -22,7 +22,7 @@ def pretty_print_predictions(predictions: list[dict[str, float]]) -> str:
     for prediction in predictions:
         ligand_class = prediction['Class']
         probability = prediction['Probability']
-        link = f'<a href="{base_url}{ligand_class}" target="_blank">{ligand_class}</a>'
+        link = f'<a href="cxcmd: open {base_url}{ligand_class}">{ligand_class}</a>'
         html_output += f"<tr><td>{link}</td><td>{probability:.3f}</td></tr>"
 
     # Close the HTML table
