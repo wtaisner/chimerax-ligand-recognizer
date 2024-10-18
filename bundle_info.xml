@@ -64,6 +64,10 @@ will be displayed without the ChimeraX- prefix.
 	predicts class of a ligand </ChimeraXClassifier>
     <ChimeraXClassifier>ChimeraX :: Command :: blob validate :: General ::
 	predicts class of a ligand </ChimeraXClassifier>
+    <ChimeraXClassifier>ChimeraX :: Command :: blob recognize :: General ::
+	predicts class of a ligand </ChimeraXClassifier>
+    <ChimeraXClassifier>ChimeraX :: Command :: blobus recognitus :: General ::
+	predicts class of a ligand </ChimeraXClassifier>
   </Classifiers>
 
 </BundleInfo>
