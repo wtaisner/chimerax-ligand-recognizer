@@ -21,6 +21,7 @@ The tool implements new commands:
 TODO: add from toolshed once it's available.
 
 You can install the bundle manually by downloading the repository and running the following commands in the repository directory:
+### Linux
 ```bash
 # set ChimeraX alias -- change this to your ChimeraX path
 alias chimerax=/usr/bin/chimerax
@@ -28,6 +29,13 @@ alias chimerax=/usr/bin/chimerax
 chimerax --nogui --cmd 'devel build . exit true'
 # install the package
 chimerax --nogui --cmd 'devel install . exit true'
+```
+### Windows
+```cmd
+# build the package
+PathToChimeraXBinFolder\ChimeraX-console.exe --nogui --cmd "devel build . exit true" 
+# install the package
+PathToChimeraXBinFolder\ChimeraX-console.exe --nogui --cmd "devel install . exit true" 
 ```
 
 ## Citation

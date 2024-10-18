@@ -8,7 +8,7 @@
 alias chimerax=/usr/bin/chimerax-daily
 # clean previous builds
 chimerax --nogui --cmd 'devel clean . exit true'
-rm -rf build dist ChimeraX_HelloWorld.egg-info
+rm -rf build dist ChimeraX_ligand_prediction.egg-info
 # build the package
 chimerax --nogui --cmd 'devel build . exit true'
 # install the package

@@ -5,8 +5,8 @@ When uploaded to the ChimeraX toolshed, the bundle
 will be displayed without the ChimeraX- prefix.
 -->
 
-<BundleInfo name="ChimeraX-HelloWorld"
-	    version="0.1" package="chimerax.hello_world"
+<BundleInfo name="ChimeraX-ligand-prediction"
+	    version="0.1" package="chimerax.ligand_prediction"
   	    minSessionVersion="1" maxSessionVersion="1">
 
   <!-- Additional information about bundle source -->
