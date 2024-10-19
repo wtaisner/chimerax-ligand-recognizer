@@ -228,18 +228,17 @@ def extract_ligand(
     """
     mask = get_ligand_mask(atom_radius, unit_cell, map_array, origin, ligand_coords)
     min_x, max_x, min_y, max_y, min_z, max_z = get_mask_bounding_box(mask)
+
     blob = map_array * mask
     blob = blob[
            min_x - padding: max_x + 1 + padding,
            min_y - padding: max_y + 1 + padding,
            min_z - padding: max_z + 1 + padding,
            ]
-
     # Resampling the map to target voxel size
     blob = resample_blob(blob, target_voxel_size, unit_cell, map_array)
     blob[blob < density_threshold] = 0
     blob_volume = get_blob_volume(np.sum(blob != 0), target_voxel_size)
-
     if blob_volume >= get_sphere_volume(min_blob_radius):
         fragment_mask = mask[
                         min_x - padding: max_x + 1 + padding,
@@ -258,19 +257,12 @@ def extract_ligand(
             # rescaling density values
             blob = blob * (MAP_VALUE_MAPPER[resolution] / blob[blob > 0].min())
 
-            # print(
-            #     f"Dimensions: {blob.shape}, Blob min value: {blob[blob > 0].min():.3f}, "
-            #     + f"Blob max value: {blob.max():.3f}, Non-zero: {np.sum(blob != 0):,}, "
-            #     + f"Zero: {np.sum(blob == 0):,}, NA count: {np.sum(np.isnan(blob)):,}, "
-            #     + f"Blob volume: {blob_volume:.3f}, Model coverage: {res_cov_frac:.2f}, "
-            #     + f"Blob coverage: {blob_cov_frac:.2f}"
-            # )
             return blob
         else:
-            # print(
-            #     f"Model coverage: {res_cov_frac:.2f}, "
-            #     + f"Blob coverage: {blob_cov_frac:.2f}. Not enough coverage."
-            # )
+            print(
+                f"Model coverage: {res_cov_frac:.2f}, "
+                + f"Blob coverage: {blob_cov_frac:.2f}. Not enough coverage."
+            )
             return None
     else:
         print(f"Not enough density.")
@@ -398,8 +390,6 @@ def cut_ligand_v2(
     unit_cell, map_array, origin = read_map(map_model)
     _, mask, _ = read_map(mask_model)
 
-    print(mask.shape)
-
     map_median = np.median(map_array)
     map_std = np.std(map_array)
     value_mask = (map_array < map_median - 0.5 * map_std) | (
@@ -408,16 +398,7 @@ def cut_ligand_v2(
 
     quantile_threshold = norm.cdf(density_std_threshold)
     density_threshold = np.quantile(map_array[value_mask], quantile_threshold)
-
     min_x, max_x, min_y, max_y, min_z, max_z = get_mask_bounding_box(mask)
-
-    # pad mask with 0 to match map_array shape
-    result = np.zeros_like(map_array)
-    result[:mask.shape[0], :mask.shape[1], :mask.shape[2]] = mask
-
-    mask = result
-
-    print(mask.shape)
 
     blob = map_array * mask
     blob = blob[
@@ -425,12 +406,10 @@ def cut_ligand_v2(
            min_y - padding: max_y + 1 + padding,
            min_z - padding: max_z + 1 + padding,
            ]
-
     # Resampling the map to target voxel size
     blob = resample_blob(blob, target_voxel_size, unit_cell, map_array)
     blob[blob < density_threshold] = 0
     blob_volume = get_blob_volume(np.sum(blob != 0), target_voxel_size)
-
     if blob_volume >= get_sphere_volume(min_blob_radius):
         fragment_mask = mask[
                         min_x - padding: max_x + 1 + padding,
@@ -446,22 +425,12 @@ def cut_ligand_v2(
         blob_cov_frac = np.sum(res_voxels & blob_voxels) / np.sum(blob_voxels)
 
         if res_cov_frac >= res_cov_threshold and blob_cov_frac >= blob_cov_threshold:
-            # rescaling density values
-            # blob = blob * (MAP_VALUE_MAPPER[resolution] / blob[blob > 0].min())
-
-            # print(
-            #     f"Dimensions: {blob.shape}, Blob min value: {blob[blob > 0].min():.3f}, "
-            #     + f"Blob max value: {blob.max():.3f}, Non-zero: {np.sum(blob != 0):,}, "
-            #     + f"Zero: {np.sum(blob == 0):,}, NA count: {np.sum(np.isnan(blob)):,}, "
-            #     + f"Blob volume: {blob_volume:.3f}, Model coverage: {res_cov_frac:.2f}, "
-            #     + f"Blob coverage: {blob_cov_frac:.2f}"
-            # )
             return blob
         else:
-            # print(
-            #     f"Model coverage: {res_cov_frac:.2f}, "
-            #     + f"Blob coverage: {blob_cov_frac:.2f}. Not enough coverage."
-            # )
+            print(
+                f"Model coverage: {res_cov_frac:.2f}, "
+                + f"Blob coverage: {blob_cov_frac:.2f}. Not enough coverage."
+            )
             return None
     else:
         print(f"Not enough density.")
