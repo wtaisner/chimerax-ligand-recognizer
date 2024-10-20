@@ -2,21 +2,35 @@ import tempfile
 
 import numpy as np
 import requests
-from chimerax.atomic import AtomicStructure
 from chimerax.core.commands import CmdDesc, StringArg, run
-from chimerax.geometry import Bounds
-from chimerax.map import Volume, VolumeSurface, volume_from_grid_data
-from chimerax.map_data import ArrayGridData
-from chimerax.map_data.ccp4.ccp4_grid import CCP4Grid
-from chimerax.mask.maskcommand import mask, ones_mask, ones_volume
-from chimerax.pick_blobs.pickblobs import BlobOutlineBox
-from collada.material import Surface
+from chimerax.core.session import Session
+from chimerax.map import Volume, VolumeSurface
+from chimerax.mask.maskcommand import mask
 
-from .cryoem_utils import cut_ligand, read_map, cut_ligand_v2
+from .cryoem_utils import cut_ligand, cut_and_extract_ligand
 from .utils import pretty_print_predictions
 
 
-def validate_class(session, ligand_id) -> None:
+def validate_blob(session: Session, blob: np.ndarray) -> None:
+    """ Perform the API call and print HTML output.
+
+    :param session: ChimeraX session
+    :param blob: Blob data as np.ndarray
+    """
+    if blob is None:
+        session.logger.error("...could not cut ligand.")
+    else:
+        url = "https://ligands.cs.put.poznan.pl/api/predict"
+        params = {"rescale_cryoem": False}
+        with tempfile.NamedTemporaryFile(suffix=".npz", delete=True) as tmp_file:
+            np.savez_compressed(tmp_file, blob)
+            tmp_file.seek(0)
+            r = requests.post(url, files={"file": tmp_file}, data=params)
+        results = r.json()
+        session.logger.info(msg=pretty_print_predictions(results['predictions']), is_html=True)
+
+
+def validate_class(session: Session, ligand_id: str) -> None:
     """ Prepare the ligand for the API and send it to the for validation.
 
     :param session: ChimeraX session
@@ -58,20 +72,10 @@ def validate_class(session, ligand_id) -> None:
         session.logger.error("Could not find ligand. Please provide a valid ligand id.")
     else:
         blob = cut_ligand(map_model, cif_model, residue)
-        if blob is None:
-            session.logger.error("...could not cut ligand.")
-        else:
-            url = "https://ligands.cs.put.poznan.pl/api/predict"
-            params = {"rescale_cryoem": False}
-            with tempfile.NamedTemporaryFile(suffix=".npz", delete=True) as tmp_file:
-                np.savez_compressed(tmp_file, blob)
-                tmp_file.seek(0)
-                r = requests.post(url, files={"file": tmp_file}, data=params)
-            results = r.json()
-            session.logger.info(msg=pretty_print_predictions(results['predictions']), is_html=True)
+
+        validate_blob(session, blob)
 
 
-# CmdDesc contains the command description. It is used to register the command with ChimeraX.
 blob_validate_desc = CmdDesc(
     required=[("ligand_id", StringArg)]
 )
@@ -79,12 +83,11 @@ blobus_validatus_desc = CmdDesc(
     required=[("ligand_id", StringArg)]
 )
 
-def recognize_class(session, map_id, surface_id) -> None:
-    """
-
-    :param session:
-    :param map_id:
-    :return:
+def recognize_class(session: Session, map_id: str, surface_id: str) -> None:
+    """ Recognize extracted part of a density map
+    :param session: ChimeraX Session object
+    :param map_id: id of entire density map in ChimeraX
+    :param surface_id: id of surface object that one wishes to recognize
     """
     map_tuple = tuple([int(x) for x in map_id[1:].split('.')])
     surface_tuple = tuple([int(x) for x in surface_id[1:].split('.')])
@@ -108,18 +111,9 @@ def recognize_class(session, map_id, surface_id) -> None:
 
         blob_mask = mask(session, volumes=[map_model_ones], surfaces=[blob_model], full_map=True)[0]
         setattr(blob_mask.data, "file_header", map_model.data.file_header)
-        blob = cut_ligand_v2(map_model, blob_mask)
-        if blob is None:
-            session.logger.error("...could not cut ligand.")
-        else:
-            url = "https://ligands.cs.put.poznan.pl/api/predict"
-            params = {"rescale_cryoem": False}
-            with tempfile.NamedTemporaryFile(suffix=".npz", delete=True) as tmp_file:
-                np.savez_compressed(tmp_file, blob)
-                tmp_file.seek(0)
-                r = requests.post(url, files={"file": tmp_file}, data=params)
-            results = r.json()
-            session.logger.info(msg=pretty_print_predictions(results['predictions']), is_html=True)
+        blob = cut_and_extract_ligand(map_model, blob_mask)
+
+        validate_blob(session, blob)
 
 
 blob_recognize_desc = CmdDesc(

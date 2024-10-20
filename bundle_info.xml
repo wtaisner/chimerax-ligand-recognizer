@@ -26,9 +26,22 @@ will be displayed without the ChimeraX- prefix.
     This tool assumes, that both PDB structure and density map are loaded into ChimeraX.
     Then, it can be run from the command line by pointing to a specific ligand in the PDB structure.
 
+    # TODO: change description to distinguish two modes of usage, i.e. recognize and validate
+
+
     The tool implements new commands:
-    - blob validate CHAIN: validates class of a ligand -- (e.g. blob validate /A:1401)
-    - blobus validatus: validates class of a ligand but with more magic involved (functionality is the same though) -- (e.g. blobus validatus /A:1401)
+    1. Validation
+    - blob validate ligand_id: validates class of a ligand
+    - blobus validatus ligand_id: validates class of a ligand but with more magic involved (functionality is the same though)
+    Example usage:
+    - assumes that both .cif and .ccp4 files are loaded into ChimeraX session.
+    - blob validate /A:1401 (also blobus validatus /A:1401) validates a class of ligand, assuming that the ligand is present in the data.
+    2. Recognition
+    - blob recognize original_map_id surface_id: recognizes class of a ligand
+    - blobus recognitus original_map_id surface_id: recognizes class of a ligand but with more magic involved (functionality is the same though)
+    Example usage:
+    - assuming that the .cif file is loaded as model #1 and the .cpp4 file is loaded as model #2. Furthermore, the blob (i.e. surface object) we want to extract is at #4.1.
+    - blob recognize #2 #4.1 (also blobus recognitus #2 #4.1) where #2 is the original map and #4.1 is the blob (or cropped part) we want to recognize.
   </Description>
 
   <!-- Categories is a list where this bundle should appear -->

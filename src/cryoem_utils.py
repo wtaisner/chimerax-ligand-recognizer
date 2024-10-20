@@ -372,7 +372,7 @@ def cut_ligand(
     return blob
 
 
-def cut_ligand_v2(
+def cut_and_extract_ligand(
         map_model,
         mask_model,
         density_std_threshold=2.8,
@@ -382,10 +382,19 @@ def cut_ligand_v2(
         blob_cov_threshold=0.01,
         padding=2,
 ):
-    # ligand_coords, resolution, num_particles = extract_ligand_coords(cif_model, residue)
+    """
+    Adaptation of `cut_ligand` and `extract_ligand` functions to fit needs of `blob recognize` command.
 
-    # if resolution is None or num_particles is None:
-    #     resolution = 3.0
+    :param map_model: full density map
+    :param mask_model: mask corresponding to desired part of density (blob)
+    :param density_std_threshold:
+    :param min_blob_radius:
+    :param target_voxel_size:
+    :param res_cov_threshold:
+    :param blob_cov_threshold:
+    :param padding:
+    :return:
+    """
 
     unit_cell, map_array, origin = read_map(map_model)
     _, mask, _ = read_map(mask_model)
@@ -427,10 +436,6 @@ def cut_ligand_v2(
         if res_cov_frac >= res_cov_threshold and blob_cov_frac >= blob_cov_threshold:
             return blob
         else:
-            print(
-                f"Model coverage: {res_cov_frac:.2f}, "
-                + f"Blob coverage: {blob_cov_frac:.2f}. Not enough coverage."
-            )
             return None
     else:
         print(f"Not enough density.")
