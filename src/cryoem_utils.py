@@ -202,8 +202,9 @@ def extract_ligand(
         unit_cell,
         map_array,
         origin,
-        ligand_coords,
-        xray
+        xray,
+        ligand_coords = None,
+        mask = None
 ):
     """
     Extracts a ligand blob from a given map array and saves it as a compressed numpy file.
@@ -226,7 +227,8 @@ def extract_ligand(
     Returns:
         np.ndarray: cut ligand or None
     """
-    mask = get_ligand_mask(atom_radius, unit_cell, map_array, origin, ligand_coords)
+    if ligand_coords is not None:
+        mask = get_ligand_mask(atom_radius, unit_cell, map_array, origin, ligand_coords)
     min_x, max_x, min_y, max_y, min_z, max_z = get_mask_bounding_box(mask)
 
     blob = map_array * mask
@@ -240,18 +242,6 @@ def extract_ligand(
     blob[blob < density_threshold] = 0
     blob_volume = get_blob_volume(np.sum(blob != 0), target_voxel_size)
     if blob_volume >= get_sphere_volume(min_blob_radius):
-        fragment_mask = mask[
-                        min_x - padding: max_x + 1 + padding,
-                        min_y - padding: max_y + 1 + padding,
-                        min_z - padding: max_z + 1 + padding,
-                        ]
-        fragment_mask = resample_blob(
-            fragment_mask, target_voxel_size, unit_cell, map_array
-        )
-        res_voxels = fragment_mask > 0
-        blob_voxels = blob > 0
-        res_cov_frac = np.sum(res_voxels & blob_voxels) / np.sum(res_voxels)
-        blob_cov_frac = np.sum(res_voxels & blob_voxels) / np.sum(blob_voxels)
 
         if not xray:
             blob = blob * (MAP_VALUE_MAPPER[resolution] / blob[blob > 0].min())
@@ -319,7 +309,7 @@ def extract_ligand_coords(cif_model, residue):
     return ligand_coords, resolution, num_particles
 
 
-def cut_ligand(
+def cut_ligand_from_coords(
         map_model,
         cif_model,
         residue,
@@ -356,16 +346,17 @@ def cut_ligand(
         unit_cell,
         map_array,
         origin,
-        ligand_coords,
-        xray
+        xray,
+        ligand_coords=ligand_coords,
     )
 
     return blob
 
 
-def cut_and_extract_ligand(
+def cut_ligands_by_hand(
         map_model,
         mask_model,
+        resolution,
         xray,
         density_std_threshold=2.8,
         min_blob_radius=0.8,
@@ -373,7 +364,7 @@ def cut_and_extract_ligand(
         padding=2,
 ):
     """
-    Adaptation of `cut_ligand` and `extract_ligand` functions to fit needs of `blob recognize` command.
+    Adaptation of `cut_ligand_from_coords` to fit needs of `blob recognize` command.
 
     :param map_model: full density map
     :param mask_model: mask corresponding to desired part of density (blob)
@@ -389,6 +380,8 @@ def cut_and_extract_ligand(
     unit_cell, map_array, origin = read_map(map_model)
     _, mask, _ = read_map(mask_model)
 
+
+
     map_median = np.median(map_array)
     map_std = np.std(map_array)
     value_mask = (map_array < map_median - 0.5 * map_std) | (
@@ -397,33 +390,19 @@ def cut_and_extract_ligand(
 
     quantile_threshold = norm.cdf(density_std_threshold)
     density_threshold = np.quantile(map_array[value_mask], quantile_threshold)
-    min_x, max_x, min_y, max_y, min_z, max_z = get_mask_bounding_box(mask)
 
-    blob = map_array * mask
-    blob = blob[
-           min_x - padding: max_x + 1 + padding,
-           min_y - padding: max_y + 1 + padding,
-           min_z - padding: max_z + 1 + padding,
-           ]
-    # Resampling the map to target voxel size
-    blob = resample_blob(blob, target_voxel_size, unit_cell, map_array)
-    blob[blob < density_threshold] = 0
-    blob_volume = get_blob_volume(np.sum(blob != 0), target_voxel_size)
-    if blob_volume >= get_sphere_volume(min_blob_radius):
-        fragment_mask = mask[
-                        min_x - padding: max_x + 1 + padding,
-                        min_y - padding: max_y + 1 + padding,
-                        min_z - padding: max_z + 1 + padding,
-                        ]
-        fragment_mask = resample_blob(
-            fragment_mask, target_voxel_size, unit_cell, map_array
-        )
-        res_voxels = fragment_mask > 0
-        blob_voxels = blob > 0
-        res_cov_frac = np.sum(res_voxels & blob_voxels) / np.sum(res_voxels)
-        blob_cov_frac = np.sum(res_voxels & blob_voxels) / np.sum(blob_voxels)
+    blob = extract_ligand(
+        density_threshold,
+        min_blob_radius,
+        0.0,
+        target_voxel_size,
+        resolution,
+        padding,
+        unit_cell,
+        map_array,
+        origin,
+        xray,
+        mask=mask,
+    )
 
-        return blob
-    else:
-        print(f"Not enough density.")
-        return None
+    return blob
