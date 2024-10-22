@@ -198,13 +198,12 @@ def extract_ligand(
         atom_radius,
         target_voxel_size,
         resolution,
-        res_cov_threshold,
-        blob_cov_threshold,
         padding,
         unit_cell,
         map_array,
         origin,
         ligand_coords,
+        xray
 ):
     """
     Extracts a ligand blob from a given map array and saves it as a compressed numpy file.
@@ -222,6 +221,7 @@ def extract_ligand(
         map_array (np.ndarray): Map array.
         origin (np.ndarray): Origin of the map.
         ligand_coords (np.ndarray): Coordinates of the ligand.
+        xray (bool): whether the map is an xray map or not (if not it is assumed to be cryoem).
 
     Returns:
         np.ndarray: cut ligand or None
@@ -253,17 +253,10 @@ def extract_ligand(
         res_cov_frac = np.sum(res_voxels & blob_voxels) / np.sum(res_voxels)
         blob_cov_frac = np.sum(res_voxels & blob_voxels) / np.sum(blob_voxels)
 
-        if res_cov_frac >= res_cov_threshold and blob_cov_frac >= blob_cov_threshold:
-            # rescaling density values
+        if not xray:
             blob = blob * (MAP_VALUE_MAPPER[resolution] / blob[blob > 0].min())
 
-            return blob
-        else:
-            print(
-                f"Model coverage: {res_cov_frac:.2f}, "
-                + f"Blob coverage: {blob_cov_frac:.2f}. Not enough coverage."
-            )
-            return None
+        return blob
     else:
         print(f"Not enough density.")
         return None
@@ -330,12 +323,11 @@ def cut_ligand(
         map_model,
         cif_model,
         residue,
+        xray,
         density_std_threshold=2.8,
         min_blob_radius=0.8,
         atom_radius=1.5,
         target_voxel_size=0.2,
-        res_cov_threshold=0.02,
-        blob_cov_threshold=0.01,
         padding=2,
 ):
     ligand_coords, resolution, num_particles = extract_ligand_coords(cif_model, residue)
@@ -360,13 +352,12 @@ def cut_ligand(
         atom_radius,
         target_voxel_size,
         resolution,
-        res_cov_threshold,
-        blob_cov_threshold,
         padding,
         unit_cell,
         map_array,
         origin,
         ligand_coords,
+        xray
     )
 
     return blob
@@ -375,11 +366,10 @@ def cut_ligand(
 def cut_and_extract_ligand(
         map_model,
         mask_model,
+        xray,
         density_std_threshold=2.8,
         min_blob_radius=0.8,
         target_voxel_size=0.2,
-        res_cov_threshold=0.02,
-        blob_cov_threshold=0.01,
         padding=2,
 ):
     """
@@ -433,10 +423,7 @@ def cut_and_extract_ligand(
         res_cov_frac = np.sum(res_voxels & blob_voxels) / np.sum(res_voxels)
         blob_cov_frac = np.sum(res_voxels & blob_voxels) / np.sum(blob_voxels)
 
-        if res_cov_frac >= res_cov_threshold and blob_cov_frac >= blob_cov_threshold:
-            return blob
-        else:
-            return None
+        return blob
     else:
         print(f"Not enough density.")
         return None
