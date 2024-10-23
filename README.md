@@ -9,25 +9,6 @@ This bundle provides ChimeraX commands for recognizing ligands in cryoEM and X-r
 - find the pretrained model and experiment code at [this GitHub repository](https://github.com/jkarolczak/ligand-classification); 
 - get the datasets used for training and testing the model at [Zenodo](https://zenodo.org/records/10908325). 
 
-## Usage
-This tool assumes, that both .pdb/.cif structure and a .ccp4 cryoEM or crystallographic difference map are loaded into ChimeraX (e.g. `open 8SOR/8sor.cif; open 8SOR/map_model_difference_1.ccp4;`). The difference map should be the Fo-Fc map for X-ray crystallography
-and for cryoEM it should be the result of PHENIX's `phenix.real_space_diff_map "$MODEL" "$MAP" "resolution=$RES" command`. To obtain the cryoEM difference map, you can use the `computeMapModelDifference.sh` script available in this repository. With the partial model and difference map opened, within ChimeraX you can run the commands presented below to validate an existing ligand or to predict a ligand matching a selected map fragment.
-
-The tool implements two basic commands:
-1. `blob validate [res_id] [map_id] [structure_id] [xray False/True]`: validates (performs a prediction for) an existing ligand at res_id.
-2. `blob recognize [map_id] [surface_id] [xray False/True]`: recognizes (performs a prediction for) a ligand in a selected map fragment.
-
-All the parameters are optional and if they are not provided the command will use the currently active map, structure, surface, and assume that the map is a cryoEM map. The above two commands are aliases for `blobus validatus` and `blobus recognitus`, respectively.
-    
-Examples:
-- `blob validate /A:1401` (validates a ligand at residue 1401 in chain A using the default map and structure);
-- `blob recognize #2 #4.1` (recognize a ligand using map #2 and a user-selected surface (cropped map fragment) #4.1);
-- `blob validate /A:1401 xray True` (validates a ligand at residue 1401 in chain A using the default map and structure and treat the map as an X-ray difference map).
-
-The tool will output the top 10 predicted ligand names and their confidence scores in ChimeraX log window. The confidence score is a value between 0 and 1, where 1 means that the model is certain of a given ligand type. The ligands are grouped and named by their PDB ligand identifiers, e.g. "ATP" or "ADP". Ypu can click on the ligand group name to see the names of the ligands in the group.
-
-![Example output](src/docs/user/commands/img/screenshot.jpg)
-
 ## Installation
 
 ### ChimeraX Toolshed
@@ -52,6 +33,32 @@ chimerax --nogui --cmd 'devel install . exit true'
 ChimeraX-console.exe --nogui --cmd "devel build . exit true" 
 ChimeraX-console.exe --nogui --cmd "devel install . exit true" 
 ```
+
+After running the above commands, the `blob validate` and `blob recognize` commands should be available in ChimeraX. You can check it by running 
+
+```shell
+help blob
+```
+in the ChimeraX command line.
+
+## Usage
+This tool assumes, that both .pdb/.cif structure and a .ccp4 cryoEM or crystallographic difference map are loaded into ChimeraX (e.g. `open 8SOR/8sor.cif; open 8SOR/map_model_difference_1.ccp4;`). The difference map should be the Fo-Fc map for X-ray crystallography
+and for cryoEM it should be the result of PHENIX's `phenix.real_space_diff_map "$MODEL" "$MAP" "resolution=$RES" command`. To obtain the cryoEM difference map, you can use the `computeMapModelDifference.sh` script available in this repository. With the partial model and difference map opened, within ChimeraX you can run the commands presented below to validate an existing ligand or to predict a ligand matching a selected map fragment.
+
+The tool implements two basic commands:
+1. `blob validate [res_id] [map_id] [structure_id] [xray False/True]`: validates (performs a prediction for) an existing ligand at res_id.
+2. `blob recognize [map_id] [surface_id] [xray False/True]`: recognizes (performs a prediction for) a ligand in a selected map fragment.
+
+All the parameters are optional and if they are not provided the command will use the currently active map, structure, surface, and assume that the map is a cryoEM map. The above two commands are aliases for `blobus validatus` and `blobus recognitus`, respectively.
+    
+Examples:
+- `blob validate /A:1401` (validates a ligand at residue 1401 in chain A using the default map and structure);
+- `blob recognize #2 #4.1` (recognize a ligand using map #2 and a user-selected surface (cropped map fragment) #4.1);
+- `blob validate /A:1401 xray True` (validates a ligand at residue 1401 in chain A using the default map and structure and treat the map as an X-ray difference map).
+
+The tool will output the top 10 predicted ligand names and their confidence scores in ChimeraX log window. The confidence score is a value between 0 and 1, where 1 means that the model is certain of a given ligand type. The ligands are grouped and named by their PDB ligand identifiers, e.g. "ATP" or "ADP". Ypu can click on the ligand group name to see the names of the ligands in the group.
+
+![Example output](src/docs/user/commands/img/screenshot.jpg)
 
 ## Citation
 ```bibtex
