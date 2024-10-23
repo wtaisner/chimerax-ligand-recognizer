@@ -26,9 +26,18 @@ class _MyAPI(BundleAPI):
         # synopsis from bundle_info.xml if none is supplied
         # by the code.
         from . import cmd
-        if ci.name == "blobus validatus" or ci.name == "blob validate":
+        if ci.name == "blobus validatus":
             func = cmd.validate_class
             desc = cmd.blob_validate_desc
+        elif ci.name == "blob validate":
+            func = cmd.validate_class
+            desc = cmd.blobus_validatus_desc
+        elif ci.name == "blob recognize":
+            func = cmd.recognize_class
+            desc = cmd.blob_recognize_desc
+        elif ci.name == "blobus recognitus":
+            func = cmd.recognize_class
+            desc = cmd.blobus_recognitus_desc
         else:
             raise ValueError("trying to register unknown command: %s" % ci.name)
         if desc.synopsis is None:
