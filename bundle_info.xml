@@ -5,8 +5,8 @@ When uploaded to the ChimeraX toolshed, the bundle
 will be displayed without the ChimeraX- prefix.
 -->
 
-<BundleInfo name="ChimeraX-ligand-prediction"
-	    version="0.1" package="chimerax.ligand_prediction"
+<BundleInfo name="ChimeraX-LigandRecognizer"
+	    version="0.1" package="chimerax.ligand_recognizer"
   	    minSessionVersion="1" maxSessionVersion="1">
 
   <!-- Additional information about bundle source -->
@@ -17,31 +17,26 @@ will be displayed without the ChimeraX- prefix.
   <!-- Synopsis is a one-line description is a full multi-line description -->
   <Synopsis>This tool takes a PDB structure (.cif) and corresponding density map (.cpp4) to validate class of a ligand.</Synopsis>
   <Description>
-    This tool implements a functionality proposed in https://github.com/jkarolczak/ligand-classification and corresponding publication.
-    It takes a PDB structure (.cif) and corresponding density map (.cpp4) and then uses a deep learning model to predict class of a ligand.
-
-    Underneath, it performs API call to a REST service to get the prediction, thus no additional software is required to run this tool.
+    This tool implements a functionality proposed in https://github.com/jkarolczak/ligand-classification and the corresponding publication
+    (https://www.biorxiv.org/content/10.1101/2024.08.27.610022v1) that uses a deep learning model to predict the class of a ligand. 
+    The prediction is performed on a server (https://ligands.cs.put.poznan.pl/) based on a map fragment sent from ChimeraX.
 
     Usage:
-    This tool assumes, that both PDB structure and density map are loaded into ChimeraX.
-    Then, it can be run from the command line by pointing to a specific ligand in the PDB structure.
+    This tool assumes, that both a .pdb/.cif structure and a .ccp4 difference map are loaded into ChimeraX. The difference map is the Fo-Fc map for X-ray crystallography
+    and for cryoEM it should be the result of PHENIX's phenix.real_space_diff_map "$MODEL" "$MAP" "resolution=$RES" command. To obtain the cryoEM difference map,
+    you can use the computeMapModelDifference.sh script available at the bundles GitHub repository (https://github.com/wtaisner/chimerax-density-map-classification).
+    Then, within ChimeraX one can run the commands presented below to validate an existing ligand or to predict a ligand matching a selected map fragment.
 
-    # TODO: change description to distinguish two modes of usage, i.e. recognize and validate
+    The tool implements two basic commands:
+    1. blob validate [res_id] [map_id] [structure_id] [xray False/True]: validates (performs a prediction for) an existing ligand at res_id.
+    2. blob recognize [map_id] [surface_id] [xray False/True]: recognizes (performs a prediction for) a ligand in a selected map fragment.
 
-
-    The tool implements new commands:
-    1. Validation
-    - blob validate ligand_id: validates class of a ligand
-    - blobus validatus ligand_id: validates class of a ligand but with more magic involved (functionality is the same though)
-    Example usage:
-    - assumes that both .cif and .ccp4 files are loaded into ChimeraX session.
-    - blob validate /A:1401 (also blobus validatus /A:1401) validates a class of ligand, assuming that the ligand is present in the data.
-    2. Recognition
-    - blob recognize original_map_id surface_id: recognizes class of a ligand
-    - blobus recognitus original_map_id surface_id: recognizes class of a ligand but with more magic involved (functionality is the same though)
-    Example usage:
-    - assuming that the .cif file is loaded as model #1 and the .cpp4 file is loaded as model #2. Furthermore, the blob (i.e. surface object) we want to extract is at #4.1.
-    - blob recognize #2 #4.1 (also blobus recognitus #2 #4.1) where #2 is the original map and #4.1 is the blob (or cropped part) we want to recognize.
+    The above two commands are aliases for blobus validatus and blobus recognitus, respectively.
+    
+    Examples:
+    - blob validate /A:1401 (validates a ligand at residue 1401 in chain A using the default map and structure)
+    - blob recognize #2 #4.1 (recognize a ligand using map #2 and a user-selected surface (cropped map fragment) #4.1)
+    - blob validate /A:1401 xray True (validates a ligand at residue 1401 in chain A using the default map and structure and treat the map as an X-ray difference map)
   </Description>
 
   <!-- Categories is a list where this bundle should appear -->
