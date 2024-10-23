@@ -46,10 +46,10 @@ This tool assumes, that both .pdb/.cif structure and a .ccp4 cryoEM or crystallo
 and for cryoEM it should be the result of PHENIX's `phenix.real_space_diff_map "$MODEL" "$MAP" "resolution=$RES" command`. To obtain the cryoEM difference map, you can use the `computeMapModelDifference.sh` script available in this repository. With the partial model and difference map opened, within ChimeraX you can run the commands presented below to validate an existing ligand or to predict a ligand matching a selected map fragment.
 
 The tool implements two basic commands:
-1. `blob validate [res_id] [map_id] [structure_id] [xray False/True]`: validates (performs a prediction for) an existing ligand at res_id.
+1. `blob validate res_id [map_id] [structure_id] [xray False/True]`: validates (performs a prediction for) an existing ligand at res_id.
 2. `blob recognize [map_id] [surface_id] [xray False/True]`: recognizes (performs a prediction for) a ligand in a selected map fragment.
 
-All the parameters are optional and if they are not provided the command will use the currently active map, structure, surface, and assume that the map is a cryoEM map. The above two commands are aliases for `blobus validatus` and `blobus recognitus`, respectively.
+All the parameters in brackets are optional and if they are not provided the command will use the currently active map, structure, surface, and assume that the map is a cryoEM map (xray False). The above two commands are aliases for `blobus validatus` and `blobus recognitus`, respectively.
     
 Examples:
 - `blob validate /A:1401` (validates a ligand at residue 1401 in chain A using the default map and structure);
