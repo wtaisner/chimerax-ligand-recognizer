@@ -1,71 +1,106 @@
-<html><head>
+<html>
 
-<link rel="stylesheet" type="text/css" href="../userdocs.css" />
+<head>
 
-<title>Command: blobus</title>
+    <link rel="stylesheet" type="text/css" href="../userdocs.css" />
 
-</head><body>
+    <title>Command: blobus</title>
 
+</head>
 
-<a name="top"></a>
+<body>
 
-<a href="../index.html">
+    <a name="top"></a>
 
-<img width="60px" src="../ChimeraX-docs-icon.svg" alt="ChimeraX docs icon"
+    <a href="../index.html">
 
-class="clRight" title="User Guide Index"/></a>
-
-
-<h3><a href="../index.html#commands">Command</a>: blobus</h3>
-
-<h3 class="usage"><a href="usageconventions.html">Usage</a>:
-
-<br><b>blobus validatus</b>
-
-<!--&nbsp;<a href="atomspec.html"><i>spec</i></a>-->
-
-<!--[&nbsp;<b>weighted</b>&nbsp;true&nbsp;|&nbsp;false&nbsp;]-->
-
-<!--[&nbsp;<b>transformed</b>&nbsp;true&nbsp;|&nbsp;false&nbsp;]-->
-
-</h3>
-
-<h3 class="usage"><a href="usageconventions.html">Usage</a>:
-
-<br><b>blobus recognitus</b>
-
-<!--&nbsp;<a href="atomspec.html"><i>spec</i></a>-->
-
-<!--&nbsp;<a href="color.html#colorname"><i>colorname</i></a>-->
-
-<!--[&nbsp;<b>weighted</b>&nbsp;true&nbsp;|&nbsp;false&nbsp;]-->
-
-<!--[&nbsp;<b>transformed</b>&nbsp;true&nbsp;|&nbsp;false&nbsp;]-->
-
-<!--[&nbsp;<b>count</b>&nbsp;<i>count</i>&nbsp;]-->
-
-</h3>
+        <img width="60px" src="../ChimeraX-docs-icon.svg" alt="ChimeraX docs icon" class="clRight"
+            title="User Guide Index" /></a>
 
 
-<a name="blobus validatus"></a>
+    <h3><a href="../index.html#commands">Command</a>: blobus</h3>
 
-<p>
+    <h3 class="usage"><a href="usageconventions.html">Usage</a>:
+        <br>
+        <b>blobus validatus</b>
+        &nbsp;<b>res_id</b>&nbsp;<i>ligand resid</i>
+        [&nbsp;<b>map_id</b>&nbsp;<i>#x numeric id of the map</i>]
+        [&nbsp;<b>pdb_id</b>&nbsp;<i>#y numeric id of the model</i>]
+        [&nbsp;<b>xray</b><i><b>False</b>|True</i>]
+    </h3>
 
-TODO
+    <h3 class="usage"><a href="usageconventions.html">Usage</a>:
+        <br>
+        <b>blobus recognitus</b>
+        [&nbsp;<b>map_id</b>&nbsp;<i>#x numeric id of the map</i>]]
+        [&nbsp;<b>surface_id</b>&nbsp;<i>#y numeric id of the cropped map fragment to analyze</i>]
+        [&nbsp;<b>pdb_id</b>&nbsp;<i>#y numeric id of the model</i>]
+        [&nbsp;<b>xray</b><i><b>False</b>|True</i>]
+        [&nbsp;<b>resolution</b>&nbsp;<i>float</i>]
 
-</p>
-
-<a name="blobus recognitus"></a>
-
-<p>
-
-TODO
-
-</p>
+    </h3>
 
 
-<hr>
+    <a name="Description" />
 
-<address>TODO</address>
+    <p>
+        This tool assumes, that both a .pdb/.cif structure and a .ccp4 cryoEM or crystallographic difference map are
+        loaded into ChimeraX (e.g. <i>open 8SOR/8sor.cif; open 8SOR/map_model_difference_1.ccp4;</i>). The difference
+        map
+        should be the Fo-Fc map for X-ray crystallography and for cryoEM it should be the result of PHENIX's
+        <i>phenix.real_space_diff_map "$MODEL" "$MAP" "resolution=$RES</i> command. To obtain the cryoEM difference map,
+        you can use the `computeMapModelDifference.sh` script available in the
+        <a href="https://github.com/wtaisner/chimerax-density-map-classification">bundle's repository</a>.
+    </p>
 
-</body></html>
+    <p>
+        With the partial model and difference map opened, within ChimeraX you can run the commands
+        presented below to validate an existing ligand or to predict a ligand matching a selected map fragment.
+    </p>
+
+    <p>
+        Examples:
+    <ul>
+        <li><b>blobus validatus /A:1401</b> (validates a ligand at residue 1401 in chain A using the default map and
+            structure);</li>
+        <li><b>blobus recognitus #2 #4.1</b> (recognize a ligand using map #2 and a user-selected surface (cropped map
+            fragment)
+            #4.1);</li>
+        <li><b>blobus validatus /A:1401 xray True</b> (validates a ligand at residue 1401 in chain A using the default
+            map and structure and treat the map as an X-ray difference map).</li>
+    </ul>
+    </p>
+
+    <p>To select a map fragment for recognition, follow these steps:
+    <ol>
+        <li>Open the map and model files in ChimeraX;</li>
+        <li>Adjust the map levels as desired;</li>
+        <li>Toggle the outline box for the map (Map / Style / Toggle Outline Box);</li>
+        <li>Crop the volume (RightMouse / Crop Volume);</li>
+        <li>Drag the box edges to the desired position with the right mouse button;</li>
+        <li>Optionally use the Right Mouse / Erase tool to zero out unwanted densities</li>
+        <li>Optionally use the Right Mouse / Blob tool to select a contiguous map fragment of interest.</li>
+        <li>Use the <b>blobus recognitus</b> command with the selected map fragment.</li>
+    </ol>
+    </p>
+
+    <p>
+        The tool will output the top 10 predicted ligand names and their confidence scores in ChimeraX log window. The
+        confidence score is a value between 0 and 1, where 1 means that the model is certain of a given ligand type. The
+        ligands are grouped and named by their PDB ligand identifiers, e.g. "ATP" or "ADP". Ypu can click on the ligand
+        group name to see the names of the ligands in the group.
+    </p>
+
+    <p>
+        The deep learning methods used to create this tool are published in the paper
+        <a href="https://www.biorxiv.org/content/10.1101/2024.08.27.610022">"Ligand Identification in CryoEM and X-ray
+            Maps Using Deep Learning"</a>
+        by Karolczak <i>et al.</i>, and the bundle's repository can be found at: <a
+            href=“https://github.com/wtaisner/chimerax-density-map-classification”>https://github.com/wtaisner/chimerax-density-map-classification</a>.
+    </p>
+
+    <hr>
+    <address>Dariusz Brzezinski, Poznan University of Technology, 2024</address>
+</body>
+
+</html>

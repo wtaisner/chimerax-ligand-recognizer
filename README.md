@@ -56,6 +56,16 @@ Examples:
 - `blob recognize #2 #4.1` (recognize a ligand using map #2 and a user-selected surface (cropped map fragment) #4.1);
 - `blob validate /A:1401 xray True` (validates a ligand at residue 1401 in chain A using the default map and structure and treat the map as an X-ray difference map).
 
+To select a map fragment for recognition, follow these steps:
+1. Open the map and model files in ChimeraX;
+2. Adjust the map levels as desired;
+3. Toggle the outline box for the map (Map / Style / Toggle Outline Box);
+4. Crop the volume (RightMouse / Crop Volume);</li>
+5. Drag the box edges to the desired position with the right mouse button;</li>
+6. Optionally use the Right Mouse / Erase tool to zero out unwanted densities</li>
+7. Optionally use the Right Mouse / Blob tool to select a contiguous map fragment of interest.</li>
+8. Use the `blob recognize` command with the selected map fragment.
+
 The tool will output the top 10 predicted ligand names and their confidence scores in ChimeraX log window. The confidence score is a value between 0 and 1, where 1 means that the model is certain of a given ligand type. The ligands are grouped and named by their PDB ligand identifiers, e.g. "ATP" or "ADP". Ypu can click on the ligand group name to see the names of the ligands in the group.
 
 ![Example output](src/docs/user/commands/img/screenshot.jpg)
