@@ -38,6 +38,12 @@ PathToChimeraXBinFolder\ChimeraX-console.exe --nogui --cmd "devel build . exit t
 PathToChimeraXBinFolder\ChimeraX-console.exe --nogui --cmd "devel install . exit true" 
 ```
 
+## Development
+Update documentation in:
+- `bundle_info.xml`
+- `README.md`
+- `src/docs/user/commands/*.html`
+
 ## Citation
 ```bibtex
 @article {Karolczak2024.08.27.610022,
