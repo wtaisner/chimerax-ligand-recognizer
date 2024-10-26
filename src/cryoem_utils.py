@@ -203,8 +203,8 @@ def extract_ligand(
         map_array,
         origin,
         xray,
-        ligand_coords = None,
-        mask = None
+        ligand_coords=None,
+        mask=None
 ):
     """
     Extracts a ligand blob from a given map array and saves it as a compressed numpy file.
@@ -248,7 +248,8 @@ def extract_ligand(
 
         return blob
     else:
-        print(f"Not enough density.")
+        print(
+            f"Not enough density in selected map fragment. The recognizer expects a {get_sphere_volume(min_blob_radius):.3f} Å^3 of non-zero voxels at a {density_threshold:.3f} value threshold, only {blob_volume:.3f}  Å^3 of non-zero voxels found")
         return None
 
 
@@ -379,8 +380,6 @@ def cut_ligands_by_hand(
 
     unit_cell, map_array, origin = read_map(map_model)
     _, mask, _ = read_map(mask_model)
-
-
 
     map_median = np.median(map_array)
     map_std = np.std(map_array)

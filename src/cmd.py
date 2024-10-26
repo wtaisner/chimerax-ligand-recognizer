@@ -1,14 +1,17 @@
+import requests
 import tempfile
 
 import numpy as np
-import requests
 from chimerax.atomic import AtomicStructure
 from chimerax.core.commands import CmdDesc, StringArg, run, BoolArg, FloatArg
 from chimerax.core.session import Session
 from chimerax.map import Volume, VolumeSurface
+from chimerax.map.volumecommand import volume
 from chimerax.mask.maskcommand import mask
+from chimerax.std_commands.style import style
+from scipy.stats import norm
 
-from .cryoem_utils import cut_ligand_from_coords, cut_ligands_by_hand, em_stats
+from .cryoem_utils import cut_ligand_from_coords, cut_ligands_by_hand, em_stats, read_map
 from .utils import pretty_print_predictions
 
 
@@ -35,7 +38,7 @@ def validate_blob(session: Session, blob: np.ndarray) -> None:
     :param blob: Blob data as np.ndarray
     """
     if blob is None:
-        session.logger.error("...could not cut ligand.")
+        session.logger.warning("...could not cut ligand.")
     else:
         url = "https://ligands.cs.put.poznan.pl/api/predict"
         params = {"rescale_cryoem": False}
@@ -126,7 +129,8 @@ blobus_validatus_desc = CmdDesc(
 )
 
 
-def recognize_class(session: Session, map_id: str | None = None, surface_id: str | None = None, pdb_id: str | None = None,
+def recognize_class(session: Session, map_id: str | None = None, surface_id: str | None = None,
+                    pdb_id: str | None = None,
                     xray: bool = False, resolution: float | None = None) -> None:
     """ Recognize extracted part of a density map
     :param session: ChimeraX Session object
@@ -157,7 +161,6 @@ def recognize_class(session: Session, map_id: str | None = None, surface_id: str
                 cif_model.opened_data_format and cif_model.opened_data_format.name == "mmCIF"):
             session.logger.error(f"Expected the id {pdb_id} to refer to PDB structure")
 
-
     if map_model is None or (cif_model is None and resolution is None):
         models = session.models.list()  # get all models in the session
         # Loop through models to find the PDB structure and extract the relevant information
@@ -186,7 +189,7 @@ def recognize_class(session: Session, map_id: str | None = None, surface_id: str
         resolution = resolution_cif if resolution_cif is not None else resolution
 
     if resolution is None:
-        session.logger.error("Could not find resolution.") #probably add more informative message
+        session.logger.error("Could not find resolution.")  # probably add more informative message
     if map_model is None:
         session.logger.error("Could not find density map. Please open density map or provide a valid density map id.")
     if blob_model is None:
@@ -205,8 +208,60 @@ def recognize_class(session: Session, map_id: str | None = None, surface_id: str
 
 
 blob_recognize_desc = CmdDesc(
-    optional=[("map_id", StringArg), ("surface_id", StringArg), ("pdb_id", StringArg), ("xray", BoolArg), ("resolution", FloatArg)],
+    optional=[("map_id", StringArg), ("surface_id", StringArg), ("pdb_id", StringArg), ("xray", BoolArg),
+              ("resolution", FloatArg)],
 )
 blobus_recognitus_desc = CmdDesc(
-    optional=[("map_id", StringArg), ("surface_id", StringArg), ("pdb_id", StringArg), ("xray", BoolArg), ("resolution", FloatArg)],
+    optional=[("map_id", StringArg), ("surface_id", StringArg), ("pdb_id", StringArg), ("xray", BoolArg),
+              ("resolution", FloatArg)],
+)
+
+
+def blob_autothreshold(session: Session, map_id: str | None = None, withstyle: bool = False,
+                       density_std_threshold: float = 2.8) -> None:
+    """
+    Automatically set the level of the density map to the value corresponding to the computed density threshold.
+    :param session: ChimeraX session
+    :param map_id: id of the density map
+    :param withstyle: whether to change the display of the density map and pdb structure for better visualization.
+    :param density_std_threshold:
+
+    :return: None
+    """
+    map_model = None
+    if map_id is not None:
+        map_model = get_model(session, map_id)
+        if not isinstance(map_model, Volume) or not (
+                map_model.opened_data_format and map_model.opened_data_format.name == 'CCP4 density map'):
+            session.logger.error(f"Expected the id {map_id} to refer to CCP4 density map")
+    if map_model is None:
+        models = session.models.list(type=Volume)  # get all Volumes in the session
+        for i, model in enumerate(models):
+            if model.opened_data_format and model.opened_data_format.name == "CCP4 density map":  # Check if the model is a density map, hopefully.
+                if map_model is not None and map_id is None:
+                    session.logger.error(
+                        msg="Multiple density maps found in the session. Please provide id of the density map.")
+                elif map_model is None and map_id is None:
+                    map_model = model
+
+    _, map_array, _ = read_map(map_model)
+
+    map_median = np.median(map_array)
+    map_std = np.std(map_array)
+    value_mask = (map_array < map_median - 0.5 * map_std) | (
+            map_array > map_median + 0.5 * map_std
+    )
+
+    quantile_threshold = norm.cdf(density_std_threshold)
+    density_threshold = np.quantile(map_array[value_mask], quantile_threshold)
+    if withstyle:
+        volume(session=session, volumes=[map_model], level=[[density_threshold]], style="surface", transparency=0.5)
+        style(session=session, atom_style="stick")
+    else:
+        volume(session=session, volumes=[map_model], level=[[density_threshold]])
+    session.logger.info(f"Level set to {density_threshold:.4f} for density map #{'.'.join(map(str, map_model.id))}")
+
+
+blob_autothreshold_desc = CmdDesc(
+    optional=[("map_id", StringArg), ("withstyle", BoolArg), ("density_std_threshold", FloatArg)]
 )

@@ -83,6 +83,8 @@ will be displayed without the ChimeraX- prefix.
 	predicts class of a ligand </ChimeraXClassifier>
     <ChimeraXClassifier>ChimeraX :: Command :: blobus recognitus :: General ::
 	predicts class of a ligand </ChimeraXClassifier>
+    <ChimeraXClassifier>ChimeraX :: Command :: blob autothreshold :: General ::
+	sets a threshold on displayed volume </ChimeraXClassifier>
   </Classifiers>
 
 </BundleInfo>
