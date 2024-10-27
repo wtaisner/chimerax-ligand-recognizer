@@ -320,6 +320,7 @@ def cut_ligand_from_coords(
         atom_radius=1.5,
         target_voxel_size=0.2,
         padding=2,
+        density_threshold: float | None = None,
 ):
     ligand_coords, resolution, num_particles = extract_ligand_coords(cif_model, residue)
 
@@ -328,14 +329,14 @@ def cut_ligand_from_coords(
 
     unit_cell, map_array, origin = read_map(map_model)
 
-    map_median = np.median(map_array)
-    map_std = np.std(map_array)
-    value_mask = (map_array < map_median - 0.5 * map_std) | (
-            map_array > map_median + 0.5 * map_std
-    )
-
-    quantile_threshold = norm.cdf(density_std_threshold)
-    density_threshold = np.quantile(map_array[value_mask], quantile_threshold)
+    if density_threshold is None:
+        map_median = np.median(map_array)
+        map_std = np.std(map_array)
+        value_mask = (map_array < map_median - 0.5 * map_std) | (
+                map_array > map_median + 0.5 * map_std
+        )
+        quantile_threshold = norm.cdf(density_std_threshold)
+        density_threshold = np.quantile(map_array[value_mask], quantile_threshold)
 
     blob = extract_ligand(
         density_threshold,
@@ -363,32 +364,34 @@ def cut_ligands_by_hand(
         min_blob_radius=0.8,
         target_voxel_size=0.2,
         padding=2,
+        density_threshold: float | None = None,
 ):
     """
     Adaptation of `cut_ligand_from_coords` to fit needs of `blob recognize` command.
 
     :param map_model: full density map
     :param mask_model: mask corresponding to desired part of density (blob)
+    :param resolution: resolution of the map
+    :param xray: whether the map is an xray map or not (if not it is assumed to be cryoem)
     :param density_std_threshold:
     :param min_blob_radius:
     :param target_voxel_size:
-    :param res_cov_threshold:
-    :param blob_cov_threshold:
     :param padding:
-    :return:
+    :param density_threshold:
     """
 
     unit_cell, map_array, origin = read_map(map_model)
     _, mask, _ = read_map(mask_model)
 
-    map_median = np.median(map_array)
-    map_std = np.std(map_array)
-    value_mask = (map_array < map_median - 0.5 * map_std) | (
-            map_array > map_median + 0.5 * map_std
-    )
+    if density_threshold is None:
+        map_median = np.median(map_array)
+        map_std = np.std(map_array)
+        value_mask = (map_array < map_median - 0.5 * map_std) | (
+                map_array > map_median + 0.5 * map_std
+        )
 
-    quantile_threshold = norm.cdf(density_std_threshold)
-    density_threshold = np.quantile(map_array[value_mask], quantile_threshold)
+        quantile_threshold = norm.cdf(density_std_threshold)
+        density_threshold = np.quantile(map_array[value_mask], quantile_threshold)
 
     blob = extract_ligand(
         density_threshold,
