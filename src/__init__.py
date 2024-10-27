@@ -41,6 +41,9 @@ class _MyAPI(BundleAPI):
         elif ci.name == "blob autothreshold":
             func = cmd.blob_autothreshold
             desc = cmd.blob_autothreshold_desc
+        elif ci.name == "blobus autothresholdus":
+            func = cmd.blob_autothreshold
+            desc = cmd.blobus_autothreshold_desc
         else:
             raise ValueError("trying to register unknown command: %s" % ci.name)
         if desc.synopsis is None:
