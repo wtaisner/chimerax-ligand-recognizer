@@ -1,9 +1,12 @@
-import requests
 import tempfile
 
 import numpy as np
+import requests
 from chimerax.atomic import AtomicStructure
 from chimerax.core.commands import CmdDesc, StringArg, run, BoolArg, FloatArg
+from chimerax.core.errors import UserError
+from chimerax.core.models import Surface
+from chimerax.core.objects import Objects
 from chimerax.core.session import Session
 from chimerax.map import Volume, VolumeSurface
 from chimerax.map.volumecommand import volume
@@ -24,8 +27,7 @@ def get_model(session: Session, model_id: str):
     """
     model_tuple = tuple([int(x) for x in model_id[1:].split('.')])
     if not model_tuple in session.models._models:
-        session.logger.error(f"Could not find queried id: {model_id}")
-        model = None
+        raise UserError(f"Could not find queried id: {model_id}")
     else:
         model = session.models._models[model_tuple]
     return model
@@ -51,14 +53,14 @@ def validate_blob(session: Session, blob: np.ndarray) -> None:
 
 
 def validate_class(session: Session, ligand_id: str, map_id: str | None = None, pdb_id: str | None = None,
-                   xray: bool = False) -> None:
+                   xray: bool = False, density_threshold: float | None = None) -> None:
     """ Prepare the ligand for the API and send it to the for validation.
-
     :param session: ChimeraX session
     :param ligand_id: id of the ligand to be validated
     :param map_id: id of the density map
     :param pdb_id: id of the PDB structure
     :param xray: whether the density map comes from xray crystallography or not (if not it is assumed to be cryoem density map)
+    :param density_threshold: threshold value for the density map
     """
     session.logger.info(msg="Attempting to cut ligand (this may take a while)...")
 
@@ -70,21 +72,16 @@ def validate_class(session: Session, ligand_id: str, map_id: str | None = None, 
         cif_model = get_model(session, pdb_id)
         if not isinstance(cif_model, AtomicStructure) or not (
                 cif_model.opened_data_format and cif_model.opened_data_format.name == "mmCIF"):
-            session.logger.error(f"Expected the id {pdb_id} to refer to PDB structure")
+            raise UserError(f"Expected the id {pdb_id} to refer to PDB structure")
 
     if map_id is not None:
         map_model = get_model(session, map_id)
         if not isinstance(map_model, Volume) or not (
                 map_model.opened_data_format and map_model.opened_data_format.name == 'CCP4 density map'):
-            session.logger.error(f"Expected the id {map_id} to refer to CCP4 density map")
+            raise UserError(f"Expected the id {map_id} to refer to CCP4 density map")
 
-    try:
-        residue_command = f"select {ligand_id}"
-        residue = run(session, residue_command, log=False)
-    except Exception:
-        session.logger.error(
-            f"Residue {ligand_id} not found in the structure. Please provide a valid ligand id.")
-        residue = None
+    residue: Objects = run(session, f"select {ligand_id}",
+                           log=False)  # it will always return an Object, even if it is empty
 
     if pdb_id is None or map_id is None:
         models = session.models.list()  # get all models in the session
@@ -94,51 +91,53 @@ def validate_class(session: Session, ligand_id: str, map_id: str | None = None, 
 
                 # Check if there is more than one PDB structure in the session
                 if cif_model is not None and pdb_id is None:
-                    session.logger.error(
-                        msg="Multiple PDB structures found in the session. Please provide id of the PBD structure.")
+                    raise UserError(
+                        "Multiple PDB structures found in the session. Please provide id of the PBD structure.")
                 elif cif_model is None and pdb_id is None:
                     cif_model = model
 
             elif model.opened_data_format and model.opened_data_format.name == "CCP4 density map":  # Check if the model is a density map, hopefully.
                 if map_model is not None and map_id is None:
-                    session.logger.error(
-                        msg="Multiple density maps found in the session. Please provide id of the density map.")
+                    raise UserError("Multiple density maps found in the session. Please provide id of the density map.")
                 elif map_model is None and map_id is None:
                     map_model = model
 
     if map_model is None:
-        session.logger.error("Could not find density map. Please open a density map or provide a valid density map id.")
+        raise UserError("Could not find density map. Please open a density map or provide a valid density map id.")
     elif cif_model is None:
-        session.logger.error(
+        raise UserError(
             "Could not find PDB structure. Please open a PDB structure or provide a valid PDB structure id.")
-    elif residue is None:
-        session.logger.error("Could not find ligand. Please provide a valid ligand id.")
+    elif residue.num_atoms == 0:
+        raise UserError(
+            f"Residue {ligand_id} not found in the structure. Please provide a valid ligand id.")
     else:
-        blob = cut_ligand_from_coords(map_model, cif_model, residue, xray)
+        blob = cut_ligand_from_coords(map_model, cif_model, residue, xray, density_threshold=density_threshold)
 
         validate_blob(session, blob)
 
 
 blob_validate_desc = CmdDesc(
     required=[("ligand_id", StringArg)],
-    optional=[("map_id", StringArg), ("pdb_id", StringArg), ("xray", BoolArg)]
+    optional=[("map_id", StringArg), ("pdb_id", StringArg), ("xray", BoolArg), ("density_threshold", FloatArg)]
 )
 blobus_validatus_desc = CmdDesc(
     required=[("ligand_id", StringArg)],
-    optional=[("map_id", StringArg), ("pdb_id", StringArg), ("xray", BoolArg)]
+    optional=[("map_id", StringArg), ("pdb_id", StringArg), ("xray", BoolArg), ("density_threshold", FloatArg)]
 )
 
 
 def recognize_class(session: Session, map_id: str | None = None, surface_id: str | None = None,
                     pdb_id: str | None = None,
-                    xray: bool = False, resolution: float | None = None) -> None:
-    """ Recognize extracted part of a density map
+                    xray: bool = False, resolution: float | None = None,
+                    density_threshold: float | None = None) -> None:
+    """ Recognize extracted part of a density map.
     :param session: ChimeraX Session object
     :param map_id: id of entire density map in ChimeraX
     :param pdb_id: id of the PDB structure in ChimeraX
     :param surface_id: id of surface object that one wishes to recognize, if not given defaults to the surface of density map object
     :param xray: whether the density map comes from xray crystallography or not (if not it is assumed to be cryoem density map)
     :param resolution: resolution of the density map (not recommended - a preferred option is to use PDB file), if pdb_id is given resolution parameter will be taken from PDB file (if found)
+    :param density_threshold: threshold value for the density map
     """
     if resolution is not None:
         session.logger.warning("Resolution provided by hand. A recommended option is to use PDB file")
@@ -148,18 +147,18 @@ def recognize_class(session: Session, map_id: str | None = None, surface_id: str
         map_model = get_model(session, map_id)
         if not isinstance(map_model, Volume) or not (
                 map_model.opened_data_format and map_model.opened_data_format.name == 'CCP4 density map'):
-            session.logger.error(f"Expected the id {map_id} to refer to CCP4 density map")
+            raise UserError(f"Expected the id {map_id} to refer to CCP4 density map")
 
     if surface_id is not None:
         blob_model = get_model(session, surface_id)
-        if not isinstance(blob_model, VolumeSurface):
-            session.logger.error(f"Expected the id {surface_id} to refer to surface data")
+        if not (isinstance(blob_model, VolumeSurface) or isinstance(blob_model, Surface)):
+            raise UserError(f"Expected the id {surface_id} to refer to surface data")
 
     if pdb_id is not None:
         cif_model = get_model(session, pdb_id)
         if not isinstance(cif_model, AtomicStructure) or not (
                 cif_model.opened_data_format and cif_model.opened_data_format.name == "mmCIF"):
-            session.logger.error(f"Expected the id {pdb_id} to refer to PDB structure")
+            raise UserError(f"Expected the id {pdb_id} to refer to PDB structure")
 
     if map_model is None or (cif_model is None and resolution is None):
         models = session.models.list()  # get all models in the session
@@ -167,8 +166,7 @@ def recognize_class(session: Session, map_id: str | None = None, surface_id: str
         for i, model in enumerate(models):
             if model.opened_data_format and model.opened_data_format.name == "CCP4 density map":  # Check if the model is a density map, hopefully.
                 if map_model is not None and map_id is None:
-                    session.logger.error(
-                        msg="Multiple density maps found in the session. Please provide id of the density map.")
+                    raise UserError("Multiple density maps found in the session. Please provide id of the density map.")
                 elif map_model is None and map_id is None:
                     map_model = model
 
@@ -176,8 +174,8 @@ def recognize_class(session: Session, map_id: str | None = None, surface_id: str
                 if model.opened_data_format and model.opened_data_format.name == "mmCIF":  # Check if the model is a PDB structure, hopefully
                     # Check if there is more than one PDB structure in the session
                     if cif_model is not None and pdb_id:
-                        session.logger.error(
-                            msg="Multiple PDB structures found in the session. Please provide id of the PBD structure.")
+                        raise UserError(
+                            "Multiple PDB structures found in the session. Please provide id of the PBD structure.")
                     elif cif_model is None and pdb_id is None:
                         cif_model = model
 
@@ -189,31 +187,32 @@ def recognize_class(session: Session, map_id: str | None = None, surface_id: str
         resolution = resolution_cif if resolution_cif is not None else resolution
 
     if resolution is None:
-        session.logger.error("Could not find resolution.")  # probably add more informative message
+        raise UserError("Could not find resolution.")  # probably add more informative message
     if map_model is None:
-        session.logger.error("Could not find density map. Please open density map or provide a valid density map id.")
+        raise UserError("Could not find density map. Please open density map or provide a valid density map id.")
     if blob_model is None:
-        session.logger.error("Could not find surface. Please provide a valid surface id.")
+        raise UserError("Could not find surface. Please provide a valid surface id.")
 
     if map_model is not None and blob_model is not None and resolution is not None:
-        map_model_ones = map_model.writable_copy(require_copy=True, subregion='all', open_model=False)
+        map_model_ones = map_model.writable_copy(require_copy=True, subregion='all', open_model=False,
+                                                 unshow_original=False)
         map_model_ones.data.full_matrix()[:] = 1
 
         blob_mask = mask(session, volumes=[map_model_ones], surfaces=[blob_model], full_map=True)[0]
         setattr(blob_mask.data, "file_header", map_model.data.file_header)
 
-        blob = cut_ligands_by_hand(map_model, blob_mask, resolution, xray)
+        blob = cut_ligands_by_hand(map_model, blob_mask, resolution, xray, density_threshold=density_threshold)
 
         validate_blob(session, blob)
 
 
 blob_recognize_desc = CmdDesc(
     optional=[("map_id", StringArg), ("surface_id", StringArg), ("pdb_id", StringArg), ("xray", BoolArg),
-              ("resolution", FloatArg)],
+              ("resolution", FloatArg), ("density_threshold", FloatArg)],
 )
 blobus_recognitus_desc = CmdDesc(
     optional=[("map_id", StringArg), ("surface_id", StringArg), ("pdb_id", StringArg), ("xray", BoolArg),
-              ("resolution", FloatArg)],
+              ("resolution", FloatArg), ("density_threshold", FloatArg)],
 )
 
 
@@ -233,14 +232,13 @@ def blob_autothreshold(session: Session, map_id: str | None = None, withstyle: b
         map_model = get_model(session, map_id)
         if not isinstance(map_model, Volume) or not (
                 map_model.opened_data_format and map_model.opened_data_format.name == 'CCP4 density map'):
-            session.logger.error(f"Expected the id {map_id} to refer to CCP4 density map")
+            raise UserError(f"Expected the id {map_id} to refer to CCP4 density map")
     if map_model is None:
         models = session.models.list(type=Volume)  # get all Volumes in the session
         for i, model in enumerate(models):
             if model.opened_data_format and model.opened_data_format.name == "CCP4 density map":  # Check if the model is a density map, hopefully.
                 if map_model is not None and map_id is None:
-                    session.logger.error(
-                        msg="Multiple density maps found in the session. Please provide id of the density map.")
+                    raise UserError("Multiple density maps found in the session. Please provide id of the density map.")
                 elif map_model is None and map_id is None:
                     map_model = model
 
@@ -263,5 +261,8 @@ def blob_autothreshold(session: Session, map_id: str | None = None, withstyle: b
 
 
 blob_autothreshold_desc = CmdDesc(
+    optional=[("map_id", StringArg), ("withstyle", BoolArg), ("density_std_threshold", FloatArg)]
+)
+blobus_autothreshold_desc = CmdDesc(
     optional=[("map_id", StringArg), ("withstyle", BoolArg), ("density_std_threshold", FloatArg)]
 )
