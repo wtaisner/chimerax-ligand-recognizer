@@ -104,7 +104,7 @@ def get_mask_bounding_box(masked_array):
     return min_x, max_x, min_y, max_y, min_z, max_z
 
 
-def resample_blob(blob, target_voxel_size, unit_cell, map_array):
+def resample_blob(blob, target_voxel_size, unit_cell, cell_sampling):
     """
     Resamples a given blob to a target voxel size using the provided unit cell and map array.
 
@@ -112,7 +112,7 @@ def resample_blob(blob, target_voxel_size, unit_cell, map_array):
         blob (numpy.ndarray): The blob to be resampled.
         target_voxel_size (float): The target voxel size (in Angstroms).
         unit_cell (tuple): The unit cell dimensions (in Angstroms).
-        map_array (numpy.ndarray): The map array.
+        cell_sampling (list): Cell sampling for the entire map.
 
     Returns:
         numpy.ndarray: The resampled blob.
@@ -120,9 +120,9 @@ def resample_blob(blob, target_voxel_size, unit_cell, map_array):
     blob = sp.ndimage.zoom(
         blob,
         [
-            unit_cell[0] / target_voxel_size / map_array.shape[0],
-            unit_cell[1] / target_voxel_size / map_array.shape[1],
-            unit_cell[2] / target_voxel_size / map_array.shape[2],
+            unit_cell[0] / target_voxel_size / cell_sampling[0],
+            unit_cell[1] / target_voxel_size / cell_sampling[1],
+            unit_cell[2] / target_voxel_size / cell_sampling[2],
         ],
         prefilter=False,
     )
@@ -201,6 +201,7 @@ def extract_ligand(
         padding,
         unit_cell,
         map_array,
+        cell_sampling,
         origin,
         xray,
         ligand_coords=None,
@@ -220,6 +221,7 @@ def extract_ligand(
         padding (int): Padding size for the blob.
         unit_cell (np.ndarray): Unit cell dimensions.
         map_array (np.ndarray): Map array.
+        cell_sampling (list): Cell sampling for the entire map.
         origin (np.ndarray): Origin of the map.
         ligand_coords (np.ndarray): Coordinates of the ligand.
         xray (bool): whether the map is an xray map or not (if not it is assumed to be cryoem).
@@ -238,7 +240,7 @@ def extract_ligand(
            min_z - padding: max_z + 1 + padding,
            ]
     # Resampling the map to target voxel size
-    blob = resample_blob(blob, target_voxel_size, unit_cell, map_array)
+    blob = resample_blob(blob, target_voxel_size, unit_cell, cell_sampling)
     blob[blob < density_threshold] = 0
     blob_volume = get_blob_volume(np.sum(blob != 0), target_voxel_size)
     if blob_volume >= get_sphere_volume(min_blob_radius):
@@ -255,6 +257,8 @@ def extract_ligand(
 
 def read_map(map_model):
     file_header = map_model.data.file_header
+    cell_sampling = [file_header.mz, file_header.my, file_header.mx]
+    
     map_array = np.asarray(map_model.full_matrix(), dtype="float")
     # chimerax reads the ccp4 file in 'right' order, so we don't need to change it
     unit_cell = np.zeros(6, dtype="float")
@@ -275,7 +279,7 @@ def read_map(map_model):
         1 * file_header["nsstart"],  # nzstart
     ]
 
-    return unit_cell, map_array, origin
+    return unit_cell, map_array, cell_sampling, origin
 
 
 def em_stats(cif_model):
@@ -327,7 +331,7 @@ def cut_ligand_from_coords(
     if resolution is None or num_particles is None:
         resolution = 3.0
 
-    unit_cell, map_array, origin = read_map(map_model)
+    unit_cell, map_array, cell_sampling, origin = read_map(map_model)
 
     if density_threshold is None:
         map_median = np.median(map_array)
@@ -347,6 +351,7 @@ def cut_ligand_from_coords(
         padding,
         unit_cell,
         map_array,
+        cell_sampling,
         origin,
         xray,
         ligand_coords=ligand_coords,
@@ -380,8 +385,8 @@ def cut_ligands_by_hand(
     :param density_threshold:
     """
 
-    unit_cell, map_array, origin = read_map(map_model)
-    _, mask, _ = read_map(mask_model)
+    unit_cell, map_array, cell_sampling, origin = read_map(map_model)
+    _, mask, _, _ = read_map(mask_model)
 
     if density_threshold is None:
         map_median = np.median(map_array)
@@ -402,6 +407,7 @@ def cut_ligands_by_hand(
         padding,
         unit_cell,
         map_array,
+        cell_sampling,
         origin,
         xray,
         mask=mask,
