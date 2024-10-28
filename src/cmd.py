@@ -242,7 +242,7 @@ def blob_autothreshold(session: Session, map_id: str | None = None, withstyle: b
                 elif map_model is None and map_id is None:
                     map_model = model
 
-    _, map_array, _ = read_map(map_model)
+    _, map_array, _, _ = read_map(map_model)
 
     map_median = np.median(map_array)
     map_std = np.std(map_array)

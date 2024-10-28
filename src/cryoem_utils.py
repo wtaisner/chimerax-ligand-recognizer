@@ -257,7 +257,7 @@ def extract_ligand(
 
 def read_map(map_model):
     file_header = map_model.data.file_header
-    cell_sampling = [file_header.mz, file_header.my, file_header.mx]
+    cell_sampling = [file_header['mz'], file_header['my'], file_header['mx']]
     
     map_array = np.asarray(map_model.full_matrix(), dtype="float")
     # chimerax reads the ccp4 file in 'right' order, so we don't need to change it
