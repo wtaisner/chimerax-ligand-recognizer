@@ -1,42 +1,42 @@
-<!--
-ChimeraX bundle names must start with "ChimeraX-"
-to avoid clashes with package names in pypi.python.org.
-When uploaded to the ChimeraX toolshed, the bundle
-will be displayed without the ChimeraX- prefix.
--->
-
 <BundleInfo name="ChimeraX-LigandRecognizer"
 	    version="0.1" package="chimerax.ligand_recognizer"
   	    minSessionVersion="1" maxSessionVersion="1">
 
   <!-- Additional information about bundle source -->
-  <Author>Witold Taisner, Anna Przybyłowska, Jacek Karolczak, Dariusz Brzeziński</Author>
+  <Author>Witold Taisner, Anna Przybyłowska, Jacek Karolczak, Dariusz Brzezinski</Author>
   <Email>taisner.witold@gmail.com</Email>
   <URL>https://github.com/wtaisner/chimerax-density-map-classification</URL>
 
   <!-- Synopsis is a one-line description is a full multi-line description -->
-  <Synopsis>This tool takes a PDB structure (.cif) and corresponding density map (.cpp4) to validate class of a ligand.</Synopsis>
+  <Synopsis>This tool takes a PDB model (.cif) and corresponding density map (.cpp4) to validate/identify ligands.</Synopsis>
   <Description>
-    This tool implements a functionality proposed in https://github.com/jkarolczak/ligand-classification and the corresponding publication
-    (https://www.biorxiv.org/content/10.1101/2024.08.27.610022v1) that uses a deep learning model to predict the class of a ligand. 
-    The prediction is performed on a server (https://ligands.cs.put.poznan.pl/) based on a map fragment sent from ChimeraX.
+    This tool implements the functionality proposed in the publication "Ligand Identification in CryoEM and X-ray Maps Using Deep Learning"
+    (https://www.biorxiv.org/content/10.1101/2024.08.27.610022v1) that uses a deep learning model to predict ligand types. 
+    The prediction is performed on a server (https://ligands.cs.put.poznan.pl/) based on a preprocessed map fragment sent from ChimeraX.
 
     Usage:
-    This tool assumes, that both a .pdb/.cif structure and a .ccp4 difference map are loaded into ChimeraX. The difference map is the Fo-Fc map for X-ray crystallography
-    and for cryoEM it should be the result of PHENIX's phenix.real_space_diff_map "$MODEL" "$MAP" "resolution=$RES" command. To obtain the cryoEM difference map,
-    you can use the computeMapModelDifference.sh script available at the bundles GitHub repository (https://github.com/wtaisner/chimerax-density-map-classification).
-    Then, within ChimeraX one can run the commands presented below to validate an existing ligand or to predict a ligand matching a selected map fragment.
+    This tool assumes, that both a .pdb/.cif (partial) model and a .ccp4 difference map are loaded into ChimeraX. A key requirement is that the
+    tool works on a difference (omit) map rather than a regular (model) map. The difference map should be the result of PHENIX's command
+    phenix.real_space_diff_map "$MODEL" "$MAP" "resolution=$RES" for cryoEM or the the Fo-Fc map for X-ray crystallography. To obtain the 
+    cryoEM difference map, you can use the computeMapModelDifference.sh script available at the bundles GitHub repository 
+    (https://github.com/wtaisner/chimerax-density-map-classification). With model and difference map at hand, within ChimeraX one can run 
+    the commands presented below to validate an existing ligand or to predict a ligand matching a selected map fragment.
 
-    The tool implements two basic commands:
-    1. blob validate [res_id] [map_id] [structure_id] [xray False/True]: validates (performs a prediction for) an existing ligand at res_id.
-    2. blob recognize [map_id] [surface_id] [xray False/True]: recognizes (performs a prediction for) a ligand in a selected map fragment.
+    The tool implements three basic commands ([] signifies optional arguments):
+    1. blob validate res_id [map_id] [model_id] [xray False/True] [density_threshold]: validates (performs a prediction for) an existing ligand at res_id.
+    2. blob recognize [map_id] [surface_id] [xray False/True] [density_threshold]: recognizes (performs a prediction for) a ligand in a selected map fragment.
+    3. blob autothreshold [map_id] [withstyle False/True] [density_std_threshold]: sets an automatic threshold on the displayed map (volume).
 
-    The above two commands are aliases for blobus validatus and blobus recognitus, respectively.
+    The above two commands are aliases for blobus validatus, blobus recognitus, and blobus autothresholdus, respectively.
     
     Examples:
-    - blob validate /A:1401 (validates a ligand at residue 1401 in chain A using the default map and structure)
+    - blob autothreshold withstyle True (sets an automatic threshold on the displayed map (volume) and changes the display style of the map and model)
+    - blob validate /A:1401 (validates a ligand at residue 1401 in chain A using the default map and model)
     - blob recognize #2 #4.1 (recognize a ligand using map #2 and a user-selected surface (cropped map fragment) #4.1)
-    - blob validate /A:1401 xray True (validates a ligand at residue 1401 in chain A using the default map and structure and treat the map as an X-ray difference map)
+    - blob validate /A:1401 xray True (validates a ligand at residue 1401 in chain A using the default map and model and treats the map as an X-ray difference map)
+
+    You can also take a look at the step-by-step tutorial available: at https://github.com/wtaisner/chimerax-ligand-recognizer/tutorial.pdf.
+    </p>
   </Description>
 
   <!-- Categories is a list where this bundle should appear -->
@@ -75,18 +75,18 @@ will be displayed without the ChimeraX- prefix.
     <PythonClassifier>Development Status :: 3 - Alpha</PythonClassifier>
     <PythonClassifier>License :: Freeware</PythonClassifier>
     <!-- ChimeraX classifiers describe supplied functionality -->
-    <ChimeraXClassifier>ChimeraX :: Command :: blobus validatus :: General ::
-	predicts class of a ligand </ChimeraXClassifier>
     <ChimeraXClassifier>ChimeraX :: Command :: blob validate :: General ::
-	predicts class of a ligand </ChimeraXClassifier>
+	predicts class of a modeled ligand </ChimeraXClassifier>
+    <ChimeraXClassifier>ChimeraX :: Command :: blobus validatus :: General ::
+	predicts class of a modeled ligand </ChimeraXClassifier>
     <ChimeraXClassifier>ChimeraX :: Command :: blob recognize :: General ::
-	predicts class of a ligand </ChimeraXClassifier>
+	predicts a ligand for a selected map fragment </ChimeraXClassifier>
     <ChimeraXClassifier>ChimeraX :: Command :: blobus recognitus :: General ::
-	predicts class of a ligand </ChimeraXClassifier>
+	predicts a ligand for a selected map fragment </ChimeraXClassifier>
     <ChimeraXClassifier>ChimeraX :: Command :: blob autothreshold :: General ::
-	sets a threshold on displayed volume </ChimeraXClassifier>
+	sets a threshold on the displayed map (volume) </ChimeraXClassifier>
     <ChimeraXClassifier>ChimeraX :: Command :: blobus autothresholdus :: General ::
-	sets a threshold on displayed volume </ChimeraXClassifier>
+	sets a threshold on the displayed map (volume) </ChimeraXClassifier>
   </Classifiers>
 
 </BundleInfo>

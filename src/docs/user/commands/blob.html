@@ -6,8 +6,6 @@
 </head>
 
 <body>
-
-
     <a name="top"></a>
 
     <a href="../index.html">
@@ -25,6 +23,7 @@
         [&nbsp;<b>map_id</b>&nbsp;<i>#x numeric id of the map</i>]
         [&nbsp;<b>pdb_id</b>&nbsp;<i>#y numeric id of the model</i>]
         [&nbsp;<b>xray</b><i><b>False</b>|True</i>]
+        [&nbsp;<b>density_threshold</b>&nbsp;<i>float</i>]
     </h3>
 
     <h3 class="usage"><a href="usageconventions.html">Usage</a>:
@@ -35,20 +34,32 @@
         [&nbsp;<b>pdb_id</b>&nbsp;<i>#y numeric id of the model</i>]
         [&nbsp;<b>xray</b><i><b>False</b>|True</i>]
         [&nbsp;<b>resolution</b>&nbsp;<i>float</i>]
-
+        [&nbsp;<b>density_threshold</b>&nbsp;<i>float</i>]
     </h3>
 
+    <h3 class="usage"><a href="usageconventions.html">Usage</a>:
+        <br>
+        <b>blob autothreshold</b>
+        [&nbsp;<b>map_id</b>&nbsp;<i>#x numeric id of the map</i>]]
+        [&nbsp;<b>withstyle</b>&nbsp;<i><b>False</b>|True</i>]
+        [&nbsp;<b>density_std_threshold</b>&nbsp;<i>float</i>]
+    </h3>
 
     <a name="Description" />
 
+    <p>The blob commands implement the functionality proposed in the publication "Ligand Identification in CryoEM and
+        X-ray Maps Using Deep Learning" (https://www.biorxiv.org/content/10.1101/2024.08.27.610022v1) that uses a deep
+        learning model to predict ligand types.
+    </p>
+
     <p>
-        This tool assumes, that both a .pdb/.cif structure and a .ccp4 cryoEM or crystallographic difference map are
-        loaded into ChimeraX (e.g. <i>open 8SOR/8sor.cif; open 8SOR/map_model_difference_1.ccp4;</i>). The difference
-        map
-        should be the Fo-Fc map for X-ray crystallography and for cryoEM it should be the result of PHENIX's
-        <i>phenix.real_space_diff_map "$MODEL" "$MAP" "resolution=$RES</i> command. To obtain the cryoEM difference map,
-        you can use the `computeMapModelDifference.sh` script available in the
-        <a href="https://github.com/wtaisner/chimerax-density-map-classification">bundle's repository</a>.
+        This tool assumes, that both a .pdb/.cif (partial) model and a .ccp4 cryoEM or crystallographic difference map
+        are loaded into ChimeraX (e.g. <i>open 8SOR/8sor.cif; open 8SOR/map_model_difference_1.ccp4;</i>). A key
+        requirement is that the tool works on a difference (omit) map rather than a regular (model) map. The difference
+        map should be the result of PHENIX's command phenix.real_space_diff_map "$MODEL" "$MAP" "resolution=$RES" for
+        cryoEM or the the Fo-Fc map for X-ray crystallography. To obtain the cryoEM difference map, you can use the
+        `computeMapModelDifference.sh` script available in the
+        <a href="https://github.com/wtaisner/chimerax-ligand-recognizer">bundle's repository</a>.
     </p>
 
     <p>
@@ -59,26 +70,26 @@
     <p>
         Examples:
     <ul>
+        <li><b>blob autothreshold withstyle True</b> (sets an automatic threshold on the displayed map (volume) and
+            changes the display style of the map and model);</li>
         <li><b>blob validate /A:1401</b> (validates a ligand at residue 1401 in chain A using the default map and
             structure);</li>
         <li><b>blob recognize #2 #4.1</b> (recognize a ligand using map #2 and a user-selected surface (cropped map
-            fragment)
-            #4.1);</li>
+            fragment) #4.1);</li>
         <li><b>blob validate /A:1401 xray True</b> (validates a ligand at residue 1401 in chain A using the default map
-            and
-            structure and treat the map as an X-ray difference map).</li>
+            and structure and treat the map as an X-ray difference map).</li>
     </ul>
     </p>
 
     <p>To select a map fragment for recognition, follow these steps:
     <ol>
         <li>Open the map and model files in ChimeraX;</li>
-        <li>Adjust the map levels as desired;</li>
-        <li>Toggle the outline box for the map (Map / Style / Toggle Outline Box);</li>
-        <li>Crop the volume (RightMouse / Crop Volume);</li>
+        <li>Adjust the map levels as desired (you can use the <b>blob autothreshold</b> command);</li>
+        <li>Toggle the outline box for the map (From the top menu: Map / Style / Toggle Outline Box);</li>
+        <li>Crop the volume (From the top menu: RightMouse / Crop Volume);</li>
         <li>Drag the box edges to the desired position with the right mouse button;</li>
-        <li>Optionally use the Right Mouse / Erase tool to zero out unwanted densities</li>
-        <li>Optionally use the Right Mouse / Blob tool to select a contiguous map fragment of interest.</li>
+        <li>Optionally use the menu option Right Mouse / Erase tool to zero out unwanted densities</li>
+        <li>Optionally use the menu option Right Mouse / Blob tool to select a contiguous map fragment of interest.</li>
         <li>Use the <b>blob recognize</b> command with the selected map fragment.</li>
     </ol>
     </p>
@@ -87,7 +98,13 @@
         The tool will output the top 10 predicted ligand names and their confidence scores in ChimeraX log window. The
         confidence score is a value between 0 and 1, where 1 means that the model is certain of a given ligand type. The
         ligands are grouped and named by their PDB ligand identifiers, e.g. "ATP" or "ADP". Ypu can click on the ligand
-        group name to see the names of the ligands in the group.
+        group name to see the names of the ligands in the group. The RARE_LIGAND group denotes ligands that had too few
+        examples in the PDB to train the deep learning model on.
+    </p>
+
+    <p>
+        You can also take a look at the step-by-step guide on how to use the tool in the
+        <a href="https://github.com/wtaisner/chimerax-ligand-recognizer/blob/main/tutorial.pdf">Online tutorial</a>.
     </p>
 
     <p>
@@ -95,7 +112,7 @@
         <a href="https://www.biorxiv.org/content/10.1101/2024.08.27.610022">"Ligand Identification in CryoEM and X-ray
             Maps Using Deep Learning"</a>
         by Karolczak <i>et al.</i>, and the bundle's repository can be found at: <a
-            href=“https://github.com/wtaisner/chimerax-density-map-classification”>https://github.com/wtaisner/chimerax-density-map-classification</a>.
+            href=“https://github.com/wtaisner/chimerax-ligand-recognizer”>https://github.com/wtaisner/chimerax-ligand-recognizer</a>.
     </p>
 
     <hr>
