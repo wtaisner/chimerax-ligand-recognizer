@@ -20,7 +20,7 @@ To install the ligand recognition tool, run ChimeraX and click *Tools* -> *More 
 
 ### Manual Installation
 
-You can install the bundle manually by downloading this repository and running the following commands in the repository directory.
+You can install the bundle manually by downloading this repository (green *Code <>* button, then *Download ZIP* on top of this page) and running the following commands in the repository directory.
 
 **Linux:**
 ```bash
