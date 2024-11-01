@@ -35,8 +35,7 @@
     - blob recognize #2 #4.1 (recognize a ligand using map #2 and a user-selected surface (cropped map fragment) #4.1)
     - blob validate /A:1401 xray True (validates a ligand at residue 1401 in chain A using the default map and model and treats the map as an X-ray difference map)
 
-    You can also take a look at the step-by-step tutorial available: at https://github.com/wtaisner/chimerax-ligand-recognizer/tutorial.pdf.
-    </p>
+    You can also take a look at the step-by-step tutorial available: at https://github.com/wtaisner/chimerax-ligand-recognizer/blob/main/tutorial.pdf.
   </Description>
 
   <!-- Categories is a list where this bundle should appear -->
