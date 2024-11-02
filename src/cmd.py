@@ -253,7 +253,7 @@ def blob_autothreshold(session: Session, map_id: str | None = None, withstyle: b
     quantile_threshold = norm.cdf(density_std_threshold)
     density_threshold = np.quantile(map_array[value_mask], quantile_threshold)
     if withstyle:
-        volume(session=session, volumes=[map_model], level=[[density_threshold]], style="surface", transparency=0.5)
+        volume(session=session, volumes=[map_model], level=[[density_threshold]], style="surface", transparency=0.5, step=1)
         style(session=session, atom_style="stick")
     else:
         volume(session=session, volumes=[map_model], level=[[density_threshold]])
