@@ -8,34 +8,37 @@
   <URL>https://github.com/wtaisner/chimerax-density-map-classification</URL>
 
   <!-- Synopsis is a one-line description is a full multi-line description -->
-  <Synopsis>This tool takes a PDB model (.cif) and corresponding density map (.cpp4) to validate/identify ligands.</Synopsis>
+  <Synopsis>This tool uses a PDB model (.pdb or .cif) and corresponding density map (.cpp4) to validate/identify ligands.</Synopsis>
   <Description>
     This tool implements the functionality proposed in the publication "Ligand Identification in CryoEM and X-ray Maps Using Deep Learning"
     (https://www.biorxiv.org/content/10.1101/2024.08.27.610022v1) that uses a deep learning model to predict ligand types. 
     The prediction is performed on a server (https://ligands.cs.put.poznan.pl/) based on a preprocessed map fragment sent from ChimeraX.
 
     Usage:
-    This tool assumes, that both a .pdb/.cif (partial) model and a .ccp4 difference map are loaded into ChimeraX. A key requirement is that the
-    tool works on a difference (omit) map rather than a regular (model) map. The difference map should be the result of PHENIX's command
-    phenix.real_space_diff_map "$MODEL" "$MAP" "resolution=$RES" for cryoEM or the the Fo-Fc map for X-ray crystallography. To obtain the 
-    cryoEM difference map, you can use the computeMapModelDifference.sh script available at the bundles GitHub repository 
-    (https://github.com/wtaisner/chimerax-density-map-classification). With model and difference map at hand, within ChimeraX one can run 
-    the commands presented below to validate an existing ligand or to predict a ligand matching a selected map fragment.
+    This tool assumes that both a .pdb/.cif model and a .ccp4 map are loaded into ChimeraX.
+    A key requirement is that the map is a map-versus-model difference map in which high density suggests unmodeled ligands.
+    For cryoEM, the difference map can be the map_maodel_difference_1.ccp4 created with the Phenix command
+    phenix.real_space_diff_map $MODEL $MAP resolution=$RES, where $MODEL is the ligand-free model, $MAP is the experimental map, and $RES
+    is the model resolution in Angstroms. Alternatively, in Linux or a Linux-like environment, the provided computeMapModelDifference.sh
+    script can be invoked as computeMapModelDifference.sh $DIR $MAP $MODEL, which will extract the resolution from the model, run
+    phenix.real_space_diff_map, and then delete map_model_difference_2.ccp4 which is not needed. For X-ray crystallography data, the
+    Fo-Fc map can be used. In either case, the model used for creating the difference map not contain the ligands of interest.
 
     The tool implements three basic commands ([] signifies optional arguments):
-    1. blob validate res_id [map_id] [model_id] [xray False/True] [density_threshold]: validates (performs a prediction for) an existing ligand at res_id.
-    2. blob recognize [map_id] [surface_id] [xray False/True] [density_threshold]: recognizes (performs a prediction for) a ligand in a selected map fragment.
-    3. blob autothreshold [map_id] [withstyle False/True] [density_std_threshold]: sets an automatic threshold on the displayed map (volume).
+    1. blob autothreshold [map_id] [style] [density_std_threshold]: set a surface-defining nthreshold for the map / volume and choose display options..
+    2. blob recognize [map_id] [surface_id] [flg_xray] [density_threshold]: tries to identify a ligand from a selected map fragment (surface).
+    3. blob validate res_id [map_id] [model_id] [flg_xray] [density_threshold]: validates a previously modeled ligand at residue res_id.
 
-    The above two commands are aliases for blobus validatus, blobus recognitus, and blobus autothresholdus, respectively.
+    Blob_recognize and blob_validate are alisses for blobus validatus, blobus recognitus, and blobus autothresholdus, respectively. Each command
+    runs the same prediction algorithm; they differ only in how the blob to be analyzed is identified.
     
     Examples:
-    - blob autothreshold withstyle True (sets an automatic threshold on the displayed map (volume) and changes the display style of the map and model)
+    - blob autothreshold withstyle 2 (sets an automatic threshold on the displayed map and changes the display style of the map and model)
     - blob validate /A:1401 (validates a ligand at residue 1401 in chain A using the default map and model)
-    - blob recognize #2 #4.1 (recognize a ligand using map #2 and a user-selected surface (cropped map fragment) #4.1)
-    - blob validate /A:1401 xray True (validates a ligand at residue 1401 in chain A using the default map and model and treats the map as an X-ray difference map)
+    - blob recognize #2 #4.1 (recognize a ligand using map #2 and a user-selected blob-limiting surface with id #4.1)
+    - blob validate /A:1401 1 (validates a ligand at residue 1401 in chain A using the default map and model and treats the map as an X-ray difference map)
 
-    You can also take a look at the step-by-step tutorial available: at https://github.com/wtaisner/chimerax-ligand-recognizer/blob/main/tutorial.pdf.
+    For more details, please see tutorial available at https://github.com/wtaisner/chimerax-ligand-recognizer/blob/main/tutorial.pdf.
   </Description>
 
   <!-- Categories is a list where this bundle should appear -->

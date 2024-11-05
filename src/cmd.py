@@ -3,7 +3,7 @@ import tempfile
 import numpy as np
 import requests
 from chimerax.atomic import AtomicStructure
-from chimerax.core.commands import CmdDesc, StringArg, run, BoolArg, FloatArg
+from chimerax.core.commands import CmdDesc, StringArg, run, BoolArg, FloatArg, IntArg
 from chimerax.core.errors import UserError
 from chimerax.core.models import Surface
 from chimerax.core.objects import Objects
@@ -252,17 +252,24 @@ def blob_autothreshold(session: Session, map_id: str | None = None, withstyle: b
 
     quantile_threshold = norm.cdf(density_std_threshold)
     density_threshold = np.quantile(map_array[value_mask], quantile_threshold)
-    if withstyle:
-        volume(session=session, volumes=[map_model], level=[[density_threshold]], style="surface", transparency=0.5, step=1)
-        style(session=session, atom_style="stick")
-    else:
+    if withstyle < 0 or withstyle > 2:
+        raise UserError("Style must be 0, 1, or 2!")
+    
+    if withstyle == 0:
         volume(session=session, volumes=[map_model], level=[[density_threshold]])
+    else:
+        volume(session=session, volumes=[map_model], level=[[density_threshold]], style="surface", transparency=0.5, step=1)
+        if withstyle == 1:
+            run(session, "hide ribbons; show atoms; style stick")
+        else:
+            run(session, "hide atoms; show ribbons")
+            
     session.logger.info(f"Level set to {density_threshold:.4f} for density map #{'.'.join(map(str, map_model.id))}")
 
 
 blob_autothreshold_desc = CmdDesc(
-    optional=[("map_id", StringArg), ("withstyle", BoolArg), ("density_std_threshold", FloatArg)]
+    optional=[("map_id", StringArg), ("withstyle", IntArg), ("density_std_threshold", FloatArg)]
 )
 blobus_autothreshold_desc = CmdDesc(
-    optional=[("map_id", StringArg), ("withstyle", BoolArg), ("density_std_threshold", FloatArg)]
+    optional=[("map_id", StringArg), ("withstyle", IntArg), ("density_std_threshold", FloatArg)]
 )
