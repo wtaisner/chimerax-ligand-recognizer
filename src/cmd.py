@@ -216,13 +216,13 @@ blobus_recognitus_desc = CmdDesc(
 )
 
 
-def blob_autothreshold(session: Session, map_id: str | None = None, withstyle: bool = False,
+def blob_autothreshold(session: Session, map_id: str | None = None, withstyle: int = 0,
                        density_std_threshold: float = 2.8) -> None:
     """
     Automatically set the level of the density map to the value corresponding to the computed density threshold.
     :param session: ChimeraX session
     :param map_id: id of the density map
-    :param withstyle: whether to change the display of the density map and pdb structure for better visualization.
+    :param withstyle: 0->unchanged, 1->stick, 2->ribbon
     :param density_std_threshold:
 
     :return: None
