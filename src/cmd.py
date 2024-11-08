@@ -52,20 +52,20 @@ def validate_blob(session: Session, blob: np.ndarray) -> None:
         session.logger.info(msg=pretty_print_predictions(results['predictions']), is_html=True)
 
 
-def validate_class(session: Session, ligand_id: str, map_id: str | None = None, pdb_id: str | None = None,
-                   xray: bool = False, density_threshold: float | None = None) -> None:
+def validate_class(session: Session, res_id: str, map_id: str | None = None, pdb_id: str | None = None,
+                   flg_xray: bool = False, density_threshold: float | None = None) -> None:
     """ Prepare the ligand for the API and send it to the for validation.
     :param session: ChimeraX session
-    :param ligand_id: id of the ligand to be validated
+    :param res_id: id of the ligand to be validated
     :param map_id: id of the density map
     :param pdb_id: id of the PDB structure
-    :param xray: whether the density map comes from xray crystallography or not (if not it is assumed to be cryoem density map)
+    :param flg_xray: whether the density map comes from xray crystallography or not (if not it is assumed to be cryoem density map)
     :param density_threshold: threshold value for the density map
     """
     session.logger.info(msg="Attempting to cut ligand (this may take a while)...")
 
-    if pdb_id is None and ligand_id[0] == '#':
-        pdb_id = ligand_id.split('/')[0]
+    if pdb_id is None and res_id[0] == '#':
+        pdb_id = res_id.split('/')[0]
 
     cif_model, map_model, residue = None, None, None
     if pdb_id is not None:
@@ -80,7 +80,7 @@ def validate_class(session: Session, ligand_id: str, map_id: str | None = None, 
                 map_model.opened_data_format and map_model.opened_data_format.name == 'CCP4 density map'):
             raise UserError(f"Expected the id {map_id} to refer to CCP4 density map")
 
-    residue: Objects = run(session, f"select {ligand_id}",
+    residue: Objects = run(session, f"select {res_id}",
                            log=False)  # it will always return an Object, even if it is empty
 
     if pdb_id is None or map_id is None:
@@ -109,33 +109,33 @@ def validate_class(session: Session, ligand_id: str, map_id: str | None = None, 
             "Could not find PDB structure. Please open a PDB structure or provide a valid PDB structure id.")
     elif residue.num_atoms == 0:
         raise UserError(
-            f"Residue {ligand_id} not found in the structure. Please provide a valid ligand id.")
+            f"Residue {res_id} not found in the structure. Please provide a valid ligand id.")
     else:
-        blob = cut_ligand_from_coords(map_model, cif_model, residue, xray, density_threshold=density_threshold)
+        blob = cut_ligand_from_coords(map_model, cif_model, residue, flg_xray, density_threshold=density_threshold)
 
         validate_blob(session, blob)
 
 
 blob_validate_desc = CmdDesc(
-    required=[("ligand_id", StringArg)],
-    optional=[("map_id", StringArg), ("pdb_id", StringArg), ("xray", BoolArg), ("density_threshold", FloatArg)]
+    required=[("res_id", StringArg)],
+    optional=[("map_id", StringArg), ("pdb_id", StringArg), ("flg_xray", BoolArg), ("density_threshold", FloatArg)]
 )
 blobus_validatus_desc = CmdDesc(
-    required=[("ligand_id", StringArg)],
-    optional=[("map_id", StringArg), ("pdb_id", StringArg), ("xray", BoolArg), ("density_threshold", FloatArg)]
+    required=[("res_id", StringArg)],
+    optional=[("map_id", StringArg), ("pdb_id", StringArg), ("flg_xray", BoolArg), ("density_threshold", FloatArg)]
 )
 
 
 def recognize_class(session: Session, map_id: str | None = None, surface_id: str | None = None,
                     pdb_id: str | None = None,
-                    xray: bool = False, resolution: float | None = None,
+                    flg_xray: bool = False, resolution: float | None = None,
                     density_threshold: float | None = None) -> None:
     """ Recognize extracted part of a density map.
     :param session: ChimeraX Session object
     :param map_id: id of entire density map in ChimeraX
     :param pdb_id: id of the PDB structure in ChimeraX
     :param surface_id: id of surface object that one wishes to recognize, if not given defaults to the surface of density map object
-    :param xray: whether the density map comes from xray crystallography or not (if not it is assumed to be cryoem density map)
+    :param flg_xray: whether the density map comes from xray crystallography or not (if not it is assumed to be cryoem density map)
     :param resolution: resolution of the density map (not recommended - a preferred option is to use PDB file), if pdb_id is given resolution parameter will be taken from PDB file (if found)
     :param density_threshold: threshold value for the density map
     """
@@ -201,28 +201,28 @@ def recognize_class(session: Session, map_id: str | None = None, surface_id: str
         blob_mask = mask(session, volumes=[map_model_ones], surfaces=[blob_model], full_map=True)[0]
         setattr(blob_mask.data, "file_header", map_model.data.file_header)
 
-        blob = cut_ligands_by_hand(map_model, blob_mask, resolution, xray, density_threshold=density_threshold)
+        blob = cut_ligands_by_hand(map_model, blob_mask, resolution, flg_xray, density_threshold=density_threshold)
 
         validate_blob(session, blob)
 
 
 blob_recognize_desc = CmdDesc(
-    optional=[("map_id", StringArg), ("surface_id", StringArg), ("pdb_id", StringArg), ("xray", BoolArg),
+    optional=[("map_id", StringArg), ("surface_id", StringArg), ("pdb_id", StringArg), ("flg_xray", BoolArg),
               ("resolution", FloatArg), ("density_threshold", FloatArg)],
 )
 blobus_recognitus_desc = CmdDesc(
-    optional=[("map_id", StringArg), ("surface_id", StringArg), ("pdb_id", StringArg), ("xray", BoolArg),
+    optional=[("map_id", StringArg), ("surface_id", StringArg), ("pdb_id", StringArg), ("flg_xray", BoolArg),
               ("resolution", FloatArg), ("density_threshold", FloatArg)],
 )
 
 
-def blob_autothreshold(session: Session, map_id: str | None = None, withstyle: int = 0,
+def blob_autothreshold(session: Session, map_id: str | None = None, style: int = 0,
                        density_std_threshold: float = 2.8) -> None:
     """
     Automatically set the level of the density map to the value corresponding to the computed density threshold.
     :param session: ChimeraX session
     :param map_id: id of the density map
-    :param withstyle: 0->unchanged, 1->stick, 2->ribbon
+    :param style: 0->unchanged, 1->stick, 2->ribbon
     :param density_std_threshold:
 
     :return: None
@@ -252,14 +252,14 @@ def blob_autothreshold(session: Session, map_id: str | None = None, withstyle: i
 
     quantile_threshold = norm.cdf(density_std_threshold)
     density_threshold = np.quantile(map_array[value_mask], quantile_threshold)
-    if withstyle < 0 or withstyle > 2:
+    if style < 0 or style > 2:
         raise UserError("Style must be 0, 1, or 2!")
     
-    if withstyle == 0:
+    if style == 0:
         volume(session=session, volumes=[map_model], level=[[density_threshold]])
     else:
         volume(session=session, volumes=[map_model], level=[[density_threshold]], style="surface", transparency=0.5, step=1)
-        if withstyle == 1:
+        if style == 1:
             run(session, "hide ribbons; show atoms; style stick")
         else:
             run(session, "hide atoms; show ribbons")
@@ -268,8 +268,8 @@ def blob_autothreshold(session: Session, map_id: str | None = None, withstyle: i
 
 
 blob_autothreshold_desc = CmdDesc(
-    optional=[("map_id", StringArg), ("withstyle", IntArg), ("density_std_threshold", FloatArg)]
+    optional=[("map_id", StringArg), ("style", IntArg), ("density_std_threshold", FloatArg)]
 )
 blobus_autothreshold_desc = CmdDesc(
-    optional=[("map_id", StringArg), ("withstyle", IntArg), ("density_std_threshold", FloatArg)]
+    optional=[("map_id", StringArg), ("style", IntArg), ("density_std_threshold", FloatArg)]
 )

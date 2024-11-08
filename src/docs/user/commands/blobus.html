@@ -1,11 +1,8 @@
 <html>
 
 <head>
-
     <link rel="stylesheet" type="text/css" href="../userdocs.css" />
-
-    <title>Command: blobus</title>
-
+    <title>Command: blob</title>
 </head>
 
 <body>
@@ -17,99 +14,113 @@
             title="User Guide Index" /></a>
 
 
-    <h3><a href="../index.html#commands">Command</a>: blobus</h3>
+    <h3><a href="../index.html#commands">Command</a>: blob</h3>
 
     <h3 class="usage"><a href="usageconventions.html">Usage</a>:
         <br>
-        <b>blobus validatus</b>
-        &nbsp;<b>res_id</b>&nbsp;<i>ligand resid</i>
-        [&nbsp;<b>map_id</b>&nbsp;<i>#x numeric id of the map</i>]
-        [&nbsp;<b>pdb_id</b>&nbsp;<i>#y numeric id of the model</i>]
-        [&nbsp;<b>xray</b><i><b>False</b>|True</i>]
-        [&nbsp;<b>density_threshold</b>&nbsp;<i>float</i>]
+        <b>blobus autothresholdus</b>
+        [&nbsp;<i>map_id</i>&nbsp;]
+        [&nbsp;<i>style</i>&nbsp;]
+        [&nbsp;<i>density_std_threshold</i>&nbsp;]
     </h3>
 
     <h3 class="usage"><a href="usageconventions.html">Usage</a>:
         <br>
         <b>blobus recognitus</b>
-        [&nbsp;<b>map_id</b>&nbsp;<i>#x numeric id of the map</i>]]
-        [&nbsp;<b>surface_id</b>&nbsp;<i>#y numeric id of the cropped map fragment to analyze</i>]
-        [&nbsp;<b>pdb_id</b>&nbsp;<i>#y numeric id of the model</i>]
-        [&nbsp;<b>xray</b><i><b>False</b>|True</i>]
-        [&nbsp;<b>resolution</b>&nbsp;<i>float</i>]
-        [&nbsp;<b>density_threshold</b>&nbsp;<i>float</i>]
+        [&nbsp;<i>map_id</i>&nbsp;]
+        [&nbsp;<i>surface_id</i>&nbsp]
+        [&nbsp;<i>pdb_id</i>&nbsp;]
+        [&nbsp;<i>flg_xray</i>&nbsp;]
+        [&nbsp;<i>resolution</i>&nbsp;]
+        [&nbsp;<i>density_threshold</i>&nbsp;]
     </h3>
 
     <h3 class="usage"><a href="usageconventions.html">Usage</a>:
         <br>
-        <b>blobus autothresholdus</b>
-        [&nbsp;<b>map_id</b>&nbsp;<i>#x numeric id of the map</i>]]
-        [&nbsp;<b>withstyle</b>&nbsp;<i><b>False</b>|True</i>]
-        [&nbsp;<b>density_std_threshold</b>&nbsp;<i>float</i>]
+        <b>blobus validatus</b>
+        &nbsp;<i>res_id</i>&nbsp;
+        [&nbsp;<i>map_id</i>&nbsp;]
+        [&nbsp;<i>pdb_id</i>&nbsp;]
+        [&nbsp;<i>flg_xray</i>&nbsp;]
+        [&nbsp;<i>density_threshold</i>&nbsp;]
     </h3>
+
+    <p>Keyword identifiers <b>map_id</b>, <b>style</b>, <b>density_std_threshold</b>, <b>surface_id</b>,
+      <b>pdb_id</b>, <b>flg_xray</b>, <b>resolution</b>, <b>density_threshold</b>, and <b>res_id</b> preceeding each
+      argument are optional when arguments are consecutive and in the order above but required otherwise.
 
     <a name="Description" />
 
-    <p>The blobus commands implement the functionality proposed in the publication "Ligand Identification in CryoEM and
+    <p>The blob commands implement the functionality proposed in the publication "Ligand Identification in CryoEM and
         X-ray Maps Using Deep Learning" (https://www.biorxiv.org/content/10.1101/2024.08.27.610022v1) that uses a deep
         learning model to predict ligand types.
     </p>
 
     <p>
-        This tool assumes, that both a .pdb/.cif (partial) model and a .ccp4 cryoEM or crystallographic difference map
-        are loaded into ChimeraX (e.g. <i>open 8SOR/8sor.cif; open 8SOR/map_model_difference_1.ccp4;</i>). A key
-        requirement is that the tool works on a difference (omit) map rather than a regular (model) map. The difference
-        map should be the result of PHENIX's command phenix.real_space_diff_map "$MODEL" "$MAP" "resolution=$RES" for
-        cryoEM or the Fo-Fc map for X-ray crystallography. To obtain the cryoEM difference map, you can use the
-        `computeMapModelDifference.sh` script available in the
-        <a href="https://github.com/wtaisner/chimerax-ligand-recognizer">bundle's repository</a>.
+        This tool assumes that both a .pdb/.cif model (possibly ligand-free) and a .ccp4 cryoEM or X-ray
+        crystallographic difference map are loaded into ChimeraX (<i>e.g.</i>
+        <b>open 8SOR/8sor.cif 8SOR/map_model_difference_1.ccp4;</b>). A key requirement is that the map is a
+        map-versus-model difference map in which high density suggests unmodeled ligands. For cryoEM, the difference
+        map can be the map_model_difference_1.ccp4 file created with the Phenix command
+        <b>phenix.real_space_diff_map $MODEL $MAP resolution=$RES</b>, where $MODEL is the ligand-free model, $MAP is
+        the experimental map, and $RES is the model resolution in Angstroms. Alternatively, in Linux or a Linux-like
+        environment, you can use the computeMapModelDifference.sh script provided at
+        <a href="https://github.com/wtaisner/chimerax-ligand-recognizer">this bundle's repository</a>.
+        Invoking this script as <b>computeMapModelDifference.sh $DIR $MAP $MODEL</b>, will extract the resolution from
+        the model, run phenix.real_space_diff_map, and then delete map_model_difference_2.ccp4, which is not needed.
+        For X-ray crystallographic data, the Fo-Fc map can be used. In either case, it is important that the model
+        used for difference map creation not contain the ligands of interest.
     </p>
 
     <p>
-        With the partial model and difference map opened, within ChimeraX you can run the commands
-        presented below to validate an existing ligand or to predict a ligand matching a selected map fragment.
+        With the (perhaps partial) model and difference map opened, within ChimeraX you can run the commands
+        presented below to choose a threshold and display options for the difference map and attempt to predict the
+        identity of a ligand (typically incorrectly or previously unmodeled) from a selected map fragment, or to
+        validate the identity of a previously modeled ligand.
     </p>
 
     <p>
         Examples:
     <ul>
-        <li><b>blobus autothresholdus withstyle True</b> (sets an automatic threshold on the displayed map (volume) and
-            changes the display style of the map and model);</li>
-        <li><b>blobus validatus /A:1401</b> (validates a ligand at residue 1401 in chain A using the default map and
-            structure);</li>
-        <li><b>blobus recognitus #2 #4.1</b> (recognize a ligand using map #2 and a user-selected surface (cropped map
-            fragment) #4.1);</li>
-        <li><b>blobus validatus /A:1401 xray True</b> (validates a ligand at residue 1401 in chain A using the default
-            map
-            and structure and treat the map as an X-ray difference map).</li>
+        <li><b>blobus autothresholdus style 1</b> (Automatically threshold the displayed map and adjusts the
+           display style of the map and model. Style 0 only thresholds, while 1 and 2 make map surfaces transparent
+           and display atoms as sticks or the backbone as ribbons, respectively.)</li>
+        <li><b>blobus recognitus #2 #4.1</b> (Recognize a ligand using map #2 and a user-selected surface / cropped map
+            fragment #4.1.)</li>
+        <li><b>blobus validatus /A:1401</b> (Validates the ligand at residue 1401 of chain A using the default map and
+            model)</li>
+        <li><b>blobus validatus /A:1401 flg_xray 1</b> (Validates a ligand at residue 1401 of chain A using the default map and
+            and model, treating the map as an X-ray, rather than a cryoEM, difference map).</li>
     </ul>
     </p>
 
-    <p>To select a map fragment for recognition, follow these steps:
+    <p>To select a map fragment(s) for recognition and attempt to identify them, you could follow these steps, for
+       example):
     <ol>
-        <li>Open the map and model files in ChimeraX;</li>
-        <li>Adjust the map levels as desired (you can use the <b>blobus autothresholdus</b> command);</li>
-        <li>Toggle the outline box for the map (From the top menu: Map / Style / Toggle Outline Box);</li>
-        <li>Crop the volume (From the top menu: RightMouse / Crop Volume);</li>
-        <li>Drag the box edges to the desired position with the right mouse button;</li>
-        <li>Optionally use the menu option Right Mouse / Erase tool to zero out unwanted densities</li>
-        <li>Optionally use the menu option Right Mouse / Blob tool to select a contiguous map fragment of interest.</li>
-        <li>Use the <b>blobus recognitus</b> command with the selected map fragment.</li>
+        <li>Open the map and model files in ChimeraX, <i>e.g.</i> ChimeraX 8FUZ.cif map_model_difference_1.ccp4.</li>
+        <li>Choose a map threshold and display settings, either automatically using the <b>blobus autothresholdus</b>
+           command) or manually.</li>
+        <li>From the Right Mouse tab select (left mouse click) Blob in the Map section;</li>
+        <li>Right mouse click on 1 or more blobs of interest to assign each a unique color.</li>
+        <li>Execute <b>surface splitbycolor #2.1</b> at the ChimeraX command line to create a surface corresponding to
+            each selected blob. Unselected blobs will be placed in surface #3.1 and selected blobs in #3.2, #3.2, etc./li>
+        <li>Attempt to identify the first blob using <b>blobus recognitus #3.2"</b>.</li>
+        <li>Repeat the previous step for any additional previously selected blobs.</li>
     </ol>
     </p>
 
     <p>
         The tool will output the top 10 predicted ligand names and their confidence scores in ChimeraX log window. The
         confidence score is a value between 0 and 1, where 1 means that the model is certain of a given ligand type. The
-        ligands are grouped and named by their PDB ligand identifiers, e.g. "ATP" or "ADP". Ypu can click on the ligand
+        ligands are grouped and named by their PDB ligand identifiers, e.g. "ATP" or "ADP". You can click on the ligand
         group name to see the names of the ligands in the group. The RARE_LIGAND group denotes ligands that had too few
         examples in the PDB to train the deep learning model on.
     </p>
 
     <p>
-        You can also take a look at the step-by-step guide on how to use the tool in the
-        <a href="https://1drv.ms/b/s!Aq419F62GZU4g_t4tguKsRrqOp8iRg?e=ZFCNMO">Online tutorial</a> (also found in
-        the bundle's repository).
+        More detailed instructions are available at the
+        <a href="https://1drv.ms/b/s!Aq419F62GZU4g_t4tguKsRrqOp8iRg?e=ZFCNMO">Online tutorial</a> which is also included
+        in the bundle's repository.
     </p>
 
     <p>

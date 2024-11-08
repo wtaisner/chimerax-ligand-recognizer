@@ -45,8 +45,8 @@
         [&nbsp;<i>density_threshold</i>&nbsp;]
     </h3>
 
-    <p>Keyword identifiers <b>map_id</b>, <b>withstyle</b>, <b>density_std_threshold</b>, <b>surface_id</b>,
-      <b>pdb_id</b>, <b>xray</b>, <b>resolution</b>, <b>density_threshold</b>, and <b>res_id</b> preceeding each
+    <p>Keyword identifiers <b>map_id</b>, <b>style</b>, <b>density_std_threshold</b>, <b>surface_id</b>,
+      <b>pdb_id</b>, <b>flg_xray</b>, <b>resolution</b>, <b>density_threshold</b>, and <b>res_id</b> preceeding each
       argument are optional when arguments are consecutive and in the order above but required otherwise.
 
     <a name="Description" />
@@ -82,14 +82,14 @@
     <p>
         Examples:
     <ul>
-        <li><b>blob autothreshold withstyle 1</b> (Automatically threshold the displayed map and adjusts the
+        <li><b>blob autothreshold style 1</b> (Automatically threshold the displayed map and adjusts the
            display style of the map and model. Style 0 only thresholds, while 1 and 2 make map surfaces transparent
            and display atoms as sticks or the backbone as ribbons, respectively.)</li>
         <li><b>blob recognize #2 #4.1</b> (Recognize a ligand using map #2 and a user-selected surface / cropped map
             fragment #4.1.)</li>
         <li><b>blob validate /A:1401</b> (Validates the ligand at residue 1401 of chain A using the default map and
             model)</li>
-        <li><b>blob validate /A:1401 1</b> (Validates a ligand at residue 1401 of chain A using the default map and
+        <li><b>blob validate /A:1401 flg_xray 1</b> (Validates a ligand at residue 1401 of chain A using the default map and
             and model, treating the map as an X-ray, rather than a cryoEM, difference map).</li>
     </ul>
     </p>

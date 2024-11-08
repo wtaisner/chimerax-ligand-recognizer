@@ -45,17 +45,16 @@ in the ChimeraX command line.
 This tool assumes, that both a .pdb/.cif (partial) model and a .ccp4 difference map are loaded into ChimeraX (e.g. `open 8SOR/8sor.cif; open 8SOR/map_model_difference_1.ccp4;`).  A key requirement is that the tool works on a difference (omit) map rather than a regular (model) map. The difference map should be the result of PHENIX's command `phenix.real_space_diff_map "$MODEL" "$MAP" "resolution=$RES"` for cryoEM or the Fo-Fc map for X-ray crystallography. To obtain the cryoEM difference map, you can use the `computeMapModelDifference.sh` script available in this repository. With the partial model and difference map opened, within ChimeraX you can run the commands presented below to validate an existing ligand or to predict a ligand matching a selected map fragment.
 
 The tool implements three basic commands:
-1. `blob validate res_id [map_id] [model_id] [xray False/True] [density_threshold]`: validates (performs a prediction for) an existing ligand at res_id.
-2. `blob recognize [map_id] [surface_id] [xray False/True] [density_threshold]`: recognizes (performs a prediction for) a ligand in a selected map fragment.
-3. `blob autothreshold [map_id] [withstyle False/True] [density_std_threshold]`: sets an automatic threshold on the displayed map (volume).
-
+1. `blob autothreshold [map_id] [style] [density_std_threshold]`: set a surface-defining nthreshold for the map / volume and choose display options..
+2. `blob recognize [map_id] [surface_id] [pdb_id] [flg_xray] [density_threshold]`: tries to identify a ligand from a selected map fragment (surface).
+3. `blob validate res_id [map_id] [pdb_id] [flg_xray] [density_threshold]`: validates a previously modeled ligand at residue res_id.
 All the parameters in brackets are optional and if they are not provided the command will use the currently active map, structure, surface, and assume that the map is a cryoEM map (xray False). The above three commands are aliases for `blobus validatus`, `blobus recognitus`, and `blobus autothresholdus` respectively.
     
 Examples:
-- `blob autothreshold withstyle True` (sets an automatic threshold on the displayed map (volume) and changes the display style of the map and model)
+- `blob autothreshold style 1` (sets an automatic threshold on the displayed map (volume) and changes the display style of the map and model)
 - `blob validate /A:1401` (validates a ligand at residue 1401 in chain A using the default map and structure);
 - `blob recognize #2 #4.1` (recognize a ligand using map #2 and a user-selected surface (cropped map fragment) #4.1);
-- `blob validate /A:1401 xray True` (validates a ligand at residue 1401 in chain A using the default map and structure and treat the map as an X-ray difference map).
+- `blob validate /A:1401 flg_xray 1` (validates a ligand at residue 1401 in chain A using the default map and structure and treat the map as an X-ray difference map).
 
 To select a map fragment for recognition, follow these steps:
 1. Open the map and model files in ChimeraX;

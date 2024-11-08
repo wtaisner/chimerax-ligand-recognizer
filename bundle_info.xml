@@ -26,17 +26,17 @@
 
     The tool implements three basic commands ([] signifies optional arguments):
     1. blob autothreshold [map_id] [style] [density_std_threshold]: set a surface-defining nthreshold for the map / volume and choose display options..
-    2. blob recognize [map_id] [surface_id] [flg_xray] [density_threshold]: tries to identify a ligand from a selected map fragment (surface).
-    3. blob validate res_id [map_id] [model_id] [flg_xray] [density_threshold]: validates a previously modeled ligand at residue res_id.
+    2. blob recognize [map_id] [surface_id] [pdb_id] [flg_xray] [density_threshold]: tries to identify a ligand from a selected map fragment (surface).
+    3. blob validate res_id [map_id] [pdb_id] [flg_xray] [density_threshold]: validates a previously modeled ligand at residue res_id.
 
     Blob_recognize and blob_validate are alisses for blobus validatus, blobus recognitus, and blobus autothresholdus, respectively. Each command
     runs the same prediction algorithm; they differ only in how the blob to be analyzed is identified.
     
     Examples:
-    - blob autothreshold withstyle 2 (sets an automatic threshold on the displayed map and changes the display style of the map and model)
+    - blob autothreshold style 2 (sets an automatic threshold on the displayed map and changes the display style of the map and model)
     - blob validate /A:1401 (validates a ligand at residue 1401 in chain A using the default map and model)
     - blob recognize #2 #4.1 (recognize a ligand using map #2 and a user-selected blob-limiting surface with id #4.1)
-    - blob validate /A:1401 1 (validates a ligand at residue 1401 in chain A using the default map and model and treats the map as an X-ray difference map)
+    - blob validate /A:1401 flg_xray 1 (validates a ligand at residue 1401 in chain A using the default map and model and treats the map as an X-ray difference map)
 
     For more details, please see tutorial available at https://github.com/wtaisner/chimerax-ligand-recognizer/blob/main/tutorial.pdf.
   </Description>
