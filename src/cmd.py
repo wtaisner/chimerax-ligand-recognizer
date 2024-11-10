@@ -11,7 +11,6 @@ from chimerax.core.session import Session
 from chimerax.map import Volume, VolumeSurface
 from chimerax.map.volumecommand import volume
 from chimerax.mask.maskcommand import mask
-from chimerax.std_commands.style import style
 from scipy.stats import norm
 
 from .cryoem_utils import cut_ligand_from_coords, cut_ligands_by_hand, em_stats, read_map
@@ -28,8 +27,7 @@ def get_model(session: Session, model_id: str):
     model_tuple = tuple([int(x) for x in model_id[1:].split('.')])
     if not model_tuple in session.models._models:
         raise UserError(f"Could not find queried id: {model_id}")
-    else:
-        model = session.models._models[model_tuple]
+    model = session.models._models[model_tuple]
     return model
 
 
@@ -86,34 +84,33 @@ def validate_class(session: Session, res_id: str, map_id: str | None = None, pdb
     if pdb_id is None or map_id is None:
         models = session.models.list()  # get all models in the session
         # Loop through models to find the PDB structure and extract the relevant information
-        for i, model in enumerate(models):
+        for model in models:
             if model.opened_data_format and model.opened_data_format.name == "mmCIF":  # Check if the model is a PDB structure, hopefully
 
                 # Check if there is more than one PDB structure in the session
                 if cif_model is not None and pdb_id is None:
                     raise UserError(
                         "Multiple PDB structures found in the session. Please provide id of the PBD structure.")
-                elif cif_model is None and pdb_id is None:
+                if cif_model is None and pdb_id is None:
                     cif_model = model
 
             elif model.opened_data_format and model.opened_data_format.name == "CCP4 density map":  # Check if the model is a density map, hopefully.
                 if map_model is not None and map_id is None:
                     raise UserError("Multiple density maps found in the session. Please provide id of the density map.")
-                elif map_model is None and map_id is None:
+                if map_model is None and map_id is None:
                     map_model = model
 
     if map_model is None:
         raise UserError("Could not find density map. Please open a density map or provide a valid density map id.")
-    elif cif_model is None:
+    if cif_model is None:
         raise UserError(
             "Could not find PDB structure. Please open a PDB structure or provide a valid PDB structure id.")
-    elif residue.num_atoms == 0:
+    if residue.num_atoms == 0:
         raise UserError(
             f"Residue {res_id} not found in the structure. Please provide a valid ligand id.")
-    else:
-        blob = cut_ligand_from_coords(map_model, cif_model, residue, flg_xray, density_threshold=density_threshold)
 
-        validate_blob(session, blob)
+    blob = cut_ligand_from_coords(map_model, cif_model, residue, flg_xray, density_threshold=density_threshold)
+    validate_blob(session, blob)
 
 
 blob_validate_desc = CmdDesc(
@@ -151,7 +148,7 @@ def recognize_class(session: Session, map_id: str | None = None, surface_id: str
 
     if surface_id is not None:
         blob_model = get_model(session, surface_id)
-        if not (isinstance(blob_model, VolumeSurface) or isinstance(blob_model, Surface)):
+        if not isinstance(blob_model, (Surface, VolumeSurface)):
             raise UserError(f"Expected the id {surface_id} to refer to surface data")
 
     if pdb_id is not None:
@@ -163,11 +160,11 @@ def recognize_class(session: Session, map_id: str | None = None, surface_id: str
     if map_model is None or (cif_model is None and resolution is None):
         models = session.models.list()  # get all models in the session
         # Loop through models to find the PDB structure and extract the relevant information
-        for i, model in enumerate(models):
+        for model in models:
             if model.opened_data_format and model.opened_data_format.name == "CCP4 density map":  # Check if the model is a density map, hopefully.
                 if map_model is not None and map_id is None:
                     raise UserError("Multiple density maps found in the session. Please provide id of the density map.")
-                elif map_model is None and map_id is None:
+                if map_model is None and map_id is None:
                     map_model = model
 
             if resolution is None:
@@ -176,7 +173,7 @@ def recognize_class(session: Session, map_id: str | None = None, surface_id: str
                     if cif_model is not None and pdb_id:
                         raise UserError(
                             "Multiple PDB structures found in the session. Please provide id of the PBD structure.")
-                    elif cif_model is None and pdb_id is None:
+                    if cif_model is None and pdb_id is None:
                         cif_model = model
 
     if surface_id is None and map_model is not None:
@@ -235,11 +232,11 @@ def blob_autothreshold(session: Session, map_id: str | None = None, style: int =
             raise UserError(f"Expected the id {map_id} to refer to CCP4 density map")
     if map_model is None:
         models = session.models.list(type=Volume)  # get all Volumes in the session
-        for i, model in enumerate(models):
+        for model in models:
             if model.opened_data_format and model.opened_data_format.name == "CCP4 density map":  # Check if the model is a density map, hopefully.
                 if map_model is not None and map_id is None:
                     raise UserError("Multiple density maps found in the session. Please provide id of the density map.")
-                elif map_model is None and map_id is None:
+                if map_model is None and map_id is None:
                     map_model = model
 
     _, map_array, _, _ = read_map(map_model)
@@ -254,16 +251,17 @@ def blob_autothreshold(session: Session, map_id: str | None = None, style: int =
     density_threshold = np.quantile(map_array[value_mask], quantile_threshold)
     if style < 0 or style > 2:
         raise UserError("Style must be 0, 1, or 2!")
-    
+
     if style == 0:
         volume(session=session, volumes=[map_model], level=[[density_threshold]])
     else:
-        volume(session=session, volumes=[map_model], level=[[density_threshold]], style="surface", transparency=0.5, step=1)
+        volume(session=session, volumes=[map_model], level=[[density_threshold]], style="surface", transparency=0.5,
+               step=1)
         if style == 1:
             run(session, "hide ribbons; show atoms; style stick")
         else:
             run(session, "hide atoms; show ribbons")
-            
+
     session.logger.info(f"Level set to {density_threshold:.4f} for density map #{'.'.join(map(str, map_model.id))}")
 
 

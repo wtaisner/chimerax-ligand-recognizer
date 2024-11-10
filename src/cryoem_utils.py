@@ -4,7 +4,7 @@ from math import sqrt
 import numpy as np
 import scipy as sp  # type: ignore
 from scipy import signal
-from scipy.stats import mode, norm  # type: ignore
+from scipy.stats import norm  # type: ignore
 
 
 def create_binary_kernel(radius):
@@ -249,16 +249,15 @@ def extract_ligand(
             blob = blob * (MAP_VALUE_MAPPER[resolution] / blob[blob > 0].min())
 
         return blob
-    else:
-        print(
-            f"Not enough density in selected map fragment. The recognizer expects a {get_sphere_volume(min_blob_radius):.3f} Å^3 of non-zero voxels at a {density_threshold:.3f} value threshold, only {blob_volume:.3f}  Å^3 of non-zero voxels found")
-        return None
+    print(
+        f"Not enough density in selected map fragment. The recognizer expects a {get_sphere_volume(min_blob_radius):.3f} Å^3 of non-zero voxels at a {density_threshold:.3f} value threshold, only {blob_volume:.3f}  Å^3 of non-zero voxels found")
+    return None
 
 
 def read_map(map_model):
     file_header = map_model.data.file_header
     cell_sampling = [file_header['mz'], file_header['my'], file_header['mx']]
-    
+
     map_array = np.asarray(map_model.full_matrix(), dtype="float")
     # chimerax reads the ccp4 file in 'right' order, so we don't need to change it
     unit_cell = np.zeros(6, dtype="float")
