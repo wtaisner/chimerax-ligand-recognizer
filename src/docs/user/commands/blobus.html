@@ -46,14 +46,15 @@
     </h3>
 
     <p>Keyword identifiers <b>map_id</b>, <b>style</b>, <b>density_std_threshold</b>, <b>surface_id</b>,
-      <b>pdb_id</b>, <b>flg_xray</b>, <b>resolution</b>, <b>density_threshold</b>, and <b>res_id</b> preceeding each
-      argument are optional when arguments are consecutive and in the order above but required otherwise.
+        <b>pdb_id</b>, <b>flg_xray</b>, <b>resolution</b>, <b>density_threshold</b>, and <b>res_id</b> preceeding each
+        argument are optional when arguments are consecutive and in the order above but required otherwise.
 
-    <a name="Description" />
+        <a name="Description" />
 
-    <p>The blob commands implement the functionality proposed in the publication "Ligand Identification in CryoEM and
-        X-ray Maps Using Deep Learning" (https://www.biorxiv.org/content/10.1101/2024.08.27.610022v1) that uses a deep
-        learning model to predict ligand types.
+    <p>The blob commands implement the functionality proposed in the publication
+        "<a href="https://www.biorxiv.org/content/10.1101/2024.08.27.610022">
+            Ligand Identification in CryoEM and X-ray Maps Using Deep Learning</a>"
+        that uses a deep learning model to predict ligand types.
     </p>
 
     <p>
@@ -83,27 +84,29 @@
         Examples:
     <ul>
         <li><b>blobus autothresholdus style 1</b> (Automatically threshold the displayed map and adjusts the
-           display style of the map and model. Style 0 only thresholds, while 1 and 2 make map surfaces transparent
-           and display atoms as sticks or the backbone as ribbons, respectively.)</li>
+            display style of the map and model. Style 0 only thresholds, while 1 and 2 make map surfaces transparent
+            and display atoms as sticks or the backbone as ribbons, respectively.)</li>
         <li><b>blobus recognitus #2 #4.1</b> (Recognize a ligand using map #2 and a user-selected surface / cropped map
             fragment #4.1.)</li>
         <li><b>blobus validatus /A:1401</b> (Validates the ligand at residue 1401 of chain A using the default map and
             model)</li>
-        <li><b>blobus validatus /A:1401 flg_xray 1</b> (Validates a ligand at residue 1401 of chain A using the default map and
+        <li><b>blobus validatus /A:1401 flg_xray 1</b> (Validates a ligand at residue 1401 of chain A using the default
+            map and
             and model, treating the map as an X-ray, rather than a cryoEM, difference map).</li>
     </ul>
     </p>
 
     <p>To select a map fragment(s) for recognition and attempt to identify them, you could follow these steps, for
-       example):
+        example):
     <ol>
         <li>Open the map and model files in ChimeraX, <i>e.g.</i> ChimeraX 8FUZ.cif map_model_difference_1.ccp4.</li>
         <li>Choose a map threshold and display settings, either automatically using the <b>blobus autothresholdus</b>
-           command) or manually.</li>
+            command) or manually.</li>
         <li>From the Right Mouse tab select (left mouse click) Blob in the Map section;</li>
         <li>Right mouse click on 1 or more blobs of interest to assign each a unique color.</li>
         <li>Execute <b>surface splitbycolor #2.1</b> at the ChimeraX command line to create a surface corresponding to
-            each selected blob. Unselected blobs will be placed in surface #3.1 and selected blobs in #3.2, #3.2, etc./li>
+            each selected blob. Unselected blobs will be placed in surface #3.1 and selected blobs in #3.2, #3.2,
+            etc./li>
         <li>Attempt to identify the first blob using <b>blobus recognitus #3.2"</b>.</li>
         <li>Repeat the previous step for any additional previously selected blobs.</li>
     </ol>
@@ -125,8 +128,8 @@
 
     <p>
         The deep learning methods used to create this tool are published in the paper
-        <a href="https://www.biorxiv.org/content/10.1101/2024.08.27.610022">"Ligand Identification in CryoEM and X-ray
-            Maps Using Deep Learning"</a>
+        "<a href="https://www.biorxiv.org/content/10.1101/2024.08.27.610022">Ligand Identification in CryoEM and X-ray
+            Maps Using Deep Learning</a>"
         by Karolczak <i>et al.</i>, and the bundle's repository can be found at: <a
             href="https://github.com/wtaisner/chimerax-ligand-recognizer">https://github.com/wtaisner/chimerax-ligand-recognizer</a>.
     </p>
