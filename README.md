@@ -13,10 +13,7 @@ This bundle provides ChimeraX commands for recognizing ligands in cryoEM and X-r
 
 ### ChimeraX Toolshed
 
-Coming soon...
-<!-- 
 To install the ligand recognition tool, run ChimeraX and click *Tools* -> *More Tools...* menu item. In the popup, search for "LigandRecognizer" and click the *Install* button. The tool's commands should now be available in ChimeraX. If this procedure fails, please refer to the manual installation instructions below.
--->
 
 ### Manual Installation
 
