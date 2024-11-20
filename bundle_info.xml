@@ -3,7 +3,7 @@
   	    minSessionVersion="1" maxSessionVersion="1">
 
   <!-- Additional information about bundle source -->
-  <Author>Witold Taisner, Anna Przybyłowska, Jacek Karolczak, Dariusz Brzezinski</Author>
+  <Author>Witold Taisner, Anna Przybyłowska, Jacek Karolczak, Dariusz Brzezinski, John M. Heumann</Author>
   <Email>taisner.witold@gmail.com</Email>
   <URL>https://github.com/wtaisner/chimerax-density-map-classification</URL>
 
