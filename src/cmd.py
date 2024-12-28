@@ -50,17 +50,27 @@ def validate_blob(session: Session, blob: np.ndarray) -> None:
         session.logger.info(msg=pretty_print_predictions(results['predictions']), is_html=True)
 
 
-def validate_class(session: Session, res_id: str, map_id: str | None = None, pdb_id: str | None = None,
-                   flg_xray: bool = False, density_threshold: float | None = None) -> None:
+def validate_class(
+        session: Session,
+        res_id: str,
+        map_id: str | None = None,
+        pdb_id: str | None = None,
+        flg_xray: bool = False,
+        resolution: float | None = None,
+        density_threshold: float | None = None,
+) -> None:
     """ Prepare the ligand for the API and send it to the for validation.
     :param session: ChimeraX session
     :param res_id: id of the ligand to be validated
     :param map_id: id of the density map
     :param pdb_id: id of the PDB structure
     :param flg_xray: whether the density map comes from xray crystallography or not (if not it is assumed to be cryoem density map)
+    :param resolution: resolution of the density map (not recommended - a preferred option is to use PDB file), if pdb_id is given resolution parameter will be taken from PDB file (if found)
     :param density_threshold: threshold value for the density map
     """
-    session.logger.info(msg="Attempting to cut ligand (this may take a while)...")
+    if resolution is not None:
+        session.logger.warning(
+            "Resolution provided by hand. A recommended option is to use a PDB file with resolution information. See tutorial for details.")
 
     if pdb_id is None and res_id[0] == '#':
         pdb_id = res_id.split('/')[0]
@@ -69,7 +79,7 @@ def validate_class(session: Session, res_id: str, map_id: str | None = None, pdb
     if pdb_id is not None:
         cif_model = get_model(session, pdb_id)
         if not isinstance(cif_model, AtomicStructure) or not (
-                cif_model.opened_data_format and cif_model.opened_data_format.name == "mmCIF"):
+                cif_model.opened_data_format and (cif_model.opened_data_format.name == "mmCIF" or cif_model.opened_data_format.name == "PDB")):
             raise UserError(f"Expected the id {pdb_id} to refer to PDB structure")
 
     if map_id is not None:
@@ -85,7 +95,9 @@ def validate_class(session: Session, res_id: str, map_id: str | None = None, pdb
         models = session.models.list()  # get all models in the session
         # Loop through models to find the PDB structure and extract the relevant information
         for model in models:
-            if model.opened_data_format and model.opened_data_format.name == "mmCIF":  # Check if the model is a PDB structure, hopefully
+            if model is None: # skip None objects
+                continue
+            if model.opened_data_format and (model.opened_data_format.name == "mmCIF" or model.opened_data_format.name == "PDB"):  # Check if the model is a PDB structure, hopefully
 
                 # Check if there is more than one PDB structure in the session
                 if cif_model is not None and pdb_id is None:
@@ -94,7 +106,7 @@ def validate_class(session: Session, res_id: str, map_id: str | None = None, pdb
                 if cif_model is None and pdb_id is None:
                     cif_model = model
 
-            elif model.opened_data_format and model.opened_data_format.name == "CCP4 density map":  # Check if the model is a density map, hopefully.
+            if model.opened_data_format and model.opened_data_format.name == "CCP4 density map":  # Check if the model is a density map, hopefully.
                 if map_model is not None and map_id is None:
                     raise UserError("Multiple density maps found in the session. Please provide id of the density map.")
                 if map_model is None and map_id is None:
@@ -109,17 +121,17 @@ def validate_class(session: Session, res_id: str, map_id: str | None = None, pdb
         raise UserError(
             f"Residue {res_id} not found in the structure. Please provide a valid ligand id.")
 
-    blob = cut_ligand_from_coords(map_model, cif_model, residue, flg_xray, density_threshold=density_threshold)
+    blob = cut_ligand_from_coords(map_model, cif_model, residue, flg_xray, density_threshold=density_threshold, resolution=resolution)
     validate_blob(session, blob)
 
 
 blob_validate_desc = CmdDesc(
     required=[("res_id", StringArg)],
-    optional=[("map_id", StringArg), ("pdb_id", StringArg), ("flg_xray", BoolArg), ("density_threshold", FloatArg)]
+    optional=[("map_id", StringArg), ("pdb_id", StringArg), ("flg_xray", BoolArg), ("density_threshold", FloatArg), ("resolution", FloatArg)]
 )
 blobus_validatus_desc = CmdDesc(
     required=[("res_id", StringArg)],
-    optional=[("map_id", StringArg), ("pdb_id", StringArg), ("flg_xray", BoolArg), ("density_threshold", FloatArg)]
+    optional=[("map_id", StringArg), ("pdb_id", StringArg), ("flg_xray", BoolArg), ("density_threshold", FloatArg), ("resolution", FloatArg)]
 )
 
 
@@ -145,7 +157,8 @@ def recognize_class(
     :param density_threshold: threshold value for the density map
     """
     if resolution is not None:
-        session.logger.warning("Resolution provided by hand. A recommended option is to use a PDB file with resolution information. See tutorial for details.")
+        session.logger.warning(
+            "Resolution provided by hand. A recommended option is to use a PDB file with resolution information. See tutorial for details.")
 
     map_model, blob_model, cif_model = None, None, None
     if map_id is not None:
@@ -162,7 +175,7 @@ def recognize_class(
     if pdb_id is not None:
         cif_model = get_model(session, pdb_id)
         if not isinstance(cif_model, AtomicStructure) or not (
-                cif_model.opened_data_format and cif_model.opened_data_format.name == "mmCIF"):
+                cif_model.opened_data_format and (cif_model.opened_data_format.name == "mmCIF" or cif_model.opened_data_format.name == "PDB")):
             raise UserError(f"Expected the id {pdb_id} to refer to PDB structure")
 
     if map_model is None or (cif_model is None and resolution is None):
@@ -176,7 +189,7 @@ def recognize_class(
                     map_model = model
 
             if resolution is None:
-                if model.opened_data_format and model.opened_data_format.name == "mmCIF":  # Check if the model is a PDB structure, hopefully
+                if model.opened_data_format and (model.opened_data_format.name == "mmCIF" or model.opened_data_format.name == "PDB"):  # Check if the model is a PDB structure, hopefully
                     # Check if there is more than one PDB structure in the session
                     if cif_model is not None and pdb_id:
                         raise UserError(
@@ -192,7 +205,8 @@ def recognize_class(
         resolution = resolution_cif if resolution_cif is not None else resolution
 
     if resolution is None:
-        raise UserError("Could not find resolution. Please make sure that it is either defined in the PDB file, or has been passed manually.")
+        raise UserError(
+            "Could not find resolution. Please make sure that it is either defined in the PDB file, or has been passed manually.")
     if map_model is None:
         raise UserError("Could not find density map. Please open density map or provide a valid density map id.")
     if blob_model is None:

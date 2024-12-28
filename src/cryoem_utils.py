@@ -1,8 +1,10 @@
 """Adapted from https://github.com/dabrze/cryo-em-ligand-cutter/tree/main"""
+import warnings
 from math import sqrt
 
 import numpy as np
 import scipy as sp  # type: ignore
+from chimerax.core.errors import UserError
 from scipy import signal
 from scipy.stats import norm  # type: ignore
 
@@ -247,6 +249,14 @@ def extract_ligand(
     if blob_volume >= get_sphere_volume(min_blob_radius):
 
         if not xray:
+            # handle resolution mapping for cryoem maps
+            if resolution > 4.0:
+                raise UserError("Map resolution > 4.0 Å. LigandRecognizer supports only maps with resolution <= 4.0 Å.")
+            if resolution < 1.0:
+                resolution = 1.0
+
+            resolution = round(resolution, 1)
+
             blob = blob * (MAP_VALUE_MAPPER[resolution] / blob[blob > 0].min())
 
         return blob
@@ -300,7 +310,7 @@ def em_stats(cif_model):
 
     if resolution is not None:
         if resolution > 4.0:
-            resolution = 4.0
+            raise UserError("Map resolution > 4.0 Å. LigandRecognizer supports only maps with resolution <= 4.0 Å.")
         elif resolution < 1.0:
             resolution = 1.0
 
@@ -325,12 +335,16 @@ def cut_ligand_from_coords(
         target_voxel_size=0.2,
         padding=2,
         density_threshold: float | None = None,
+        resolution: float | None = None,
 ):
-    ligand_coords, resolution, num_particles = extract_ligand_coords(cif_model, residue)
+    if resolution is None:
+        ligand_coords, resolution, _ = extract_ligand_coords(cif_model, residue)
+    else:
+        ligand_coords, _, _ = extract_ligand_coords(cif_model, residue)
+        resolution = round(resolution, 1)
 
-    if resolution is None or num_particles is None:
+    if resolution is None:
         resolution = 3.0
-
     unit_cell, map_array, cell_sampling, origin = read_map(map_model)
 
     if density_threshold is None:
