@@ -391,7 +391,7 @@ def cut_ligands_by_hand(
     :param map_model: full density map
     :param mask_model: mask corresponding to desired part of density (blob)
     :param resolution: resolution of the map
-    :param xray: whether the map is n xray map or not (if not it is assumed to be cryoem)
+    :param xray: whether the map is a xray map or not (if not it is assumed to be cryoem)
     :param density_std_threshold:
     :param min_blob_radius:
     :param target_voxel_size:
