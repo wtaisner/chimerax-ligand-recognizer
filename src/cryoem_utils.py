@@ -344,7 +344,8 @@ def cut_ligand_from_coords(
         resolution = round(resolution, 1)
 
     if resolution is None:
-        resolution = 3.0
+        raise UserError(
+            "Could not find resolution. Please make sure that it is either defined in the PDB file, or has been passed manually.")
     unit_cell, map_array, cell_sampling, origin = read_map(map_model)
 
     if density_threshold is None:
