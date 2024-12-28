@@ -1,10 +1,10 @@
-[![bioRxiv - Preprint](https://img.shields.io/badge/bioRxiv-Preprint-red)](https://www.biorxiv.org/content/10.1101/2024.08.27.610022)
+[![Bioinformatics - accepted](https://img.shields.io/badge/Accepted-green?label=Bioinformatics&labelColor=%23167da4)](https://doi.org/10.1093/bioinformatics/btae749)
 [![Streamlit - Demo](https://img.shields.io/badge/Streamlit-Demo-green)](https://ligands.cs.put.poznan.pl)
 
 # ChimeraX LigandRecognizer Bundle
 
 This bundle provides ChimeraX commands for recognizing ligands in cryoEM and X-ray crystallography maps using deep learning. The bundle is accompanying software to the paper "Ligand Identification in CryoEM and X-ray Maps Using Deep Learning" by Karolczak *et al.* To get more information on the reseach behind this tool you can:
-- read about the used model on [bioRxiv](https://www.biorxiv.org/content/10.1101/2024.08.27.610022);
+- read about the used model on [Bioinformatics](https://doi.org/10.1093/bioinformatics/btae749);
 - try the [Streamlit demo](https://ligands.cs.put.poznan.pl) to see the model in action;
 - find the pretrained model and experiment code at [this GitHub repository](https://github.com/jkarolczak/ligand-classification); 
 - get the datasets used for training and testing the model at [Zenodo](https://zenodo.org/records/10908325). 
@@ -71,11 +71,17 @@ You can also take a look at the step-by-step guide on how to use the tool in the
 
 ## Citation
 ```bibtex
-@article {LigandDeepLearning,
-	author = {Karolczak, Jacek and Przyby{\l}owska, Anna and Szewczyk, Konrad and Taisner, Witold and Heumann, John M. and Stowell, Michael H.B. and Nowicki, Micha{\l} and Brzezinski, Dariusz},
-	title = {Ligand Identification using Deep Learning},
-	year = {2024},
-	doi = {10.1101/2024.08.27.610022},
-	journal = {bioRxiv}
+@article{10.1093/bioinformatics/btae749,
+    author = {Karolczak, Jacek and Przybyłowska, Anna and Szewczyk, Konrad and Taisner, Witold and Heumann, John M and Stowell, Michael H B and Nowicki, Michał and Brzezinski, Dariusz},
+    title = {Ligand Identification in CryoEM and X-ray Maps Using Deep Learning},
+    journal = {Bioinformatics},
+    pages = {btae749},
+    year = {2024},
+    month = {12},
+    abstract = {Accurately identifying ligands plays a crucial role in the process of structure-guided drug design. Based on density maps from X-ray diffraction or cryogenic-sample electron microscopy (cryoEM), scientists verify whether small-molecule ligands bind to active sites of interest. However, the interpretation of density maps is challenging, and cognitive bias can sometimes mislead investigators into modeling fictitious compounds. Ligand identification can be aided by automatic methods, but existing approaches are available only for X-ray diffraction and are based on iterative fitting or feature-engineered machine learning rather than end-to-end deep learning.Here, we propose to identify ligands using a deep learning approach that treats density maps as 3D point clouds. We show that the proposed model is on par with existing machine learning methods for X-ray crystallography while also being applicable to cryoEM density maps. Our study demonstrates that electron density map fragments can aid the training of models that can later be applied to cryoEM structures but also highlights challenges associated with the standardization of electron microscopy maps and the quality assessment of cryoEM ligands.Code and model weights are available on GitHub at https://github.com/jkarolczak/ligands-classification  . Datasets used for training and testing are hosted at Zenodo: 10.5281/zenodo.10908325. An accompanying ChimeraX bundle is available at https://github.com/wtaisner/chimerax-ligand-recognizer.Supplementary data are available at Bioinformatics online.\\},
+    issn = {1367-4811},
+    doi = {10.1093/bioinformatics/btae749},
+    url = {https://doi.org/10.1093/bioinformatics/btae749},
+    eprint = {https://academic.oup.com/bioinformatics/advance-article-pdf/doi/10.1093/bioinformatics/btae749/61238985/btae749.pdf},
 }
 ```
