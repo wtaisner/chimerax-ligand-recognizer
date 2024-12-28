@@ -216,21 +216,22 @@ def extract_ligand(
         atom_radius (float): Radius of the atoms in the ligand.
         target_voxel_size (float): Target voxel size for the resampled blob.
         resolution (float): Resolution of the map.
-        res_cov_threshold (float): Minimum coverage threshold for the model.
-        blob_cov_threshold (float): Minimum coverage threshold for the blob.
         padding (int): Padding size for the blob.
         unit_cell (np.ndarray): Unit cell dimensions.
         map_array (np.ndarray): Map array.
         cell_sampling (list): Cell sampling for the entire map.
         origin (np.ndarray): Origin of the map.
         ligand_coords (np.ndarray): Coordinates of the ligand.
-        xray (bool): whether the map is an xray map or not (if not it is assumed to be cryoem).
+        xray (bool): whether the map is a xray map or not (if not it is assumed to be cryoem).
+        mask (np.ndarray): Mask of the ligand. If ligand
 
     Returns:
         np.ndarray: cut ligand or None
     """
     if ligand_coords is not None:
         mask = get_ligand_mask(atom_radius, unit_cell, map_array, origin, ligand_coords)
+    if mask is None:
+        raise ValueError("Mask is not provided. Provide either ligand coordinates or mask")
     min_x, max_x, min_y, max_y, min_z, max_z = get_mask_bounding_box(mask)
 
     blob = map_array * mask
@@ -376,7 +377,7 @@ def cut_ligands_by_hand(
     :param map_model: full density map
     :param mask_model: mask corresponding to desired part of density (blob)
     :param resolution: resolution of the map
-    :param xray: whether the map is an xray map or not (if not it is assumed to be cryoem)
+    :param xray: whether the map is n xray map or not (if not it is assumed to be cryoem)
     :param density_std_threshold:
     :param min_blob_radius:
     :param target_voxel_size:

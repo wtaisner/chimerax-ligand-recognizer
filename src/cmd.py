@@ -123,11 +123,19 @@ blobus_validatus_desc = CmdDesc(
 )
 
 
-def recognize_class(session: Session, map_id: str | None = None, surface_id: str | None = None,
-                    pdb_id: str | None = None,
-                    flg_xray: bool = False, resolution: float | None = None,
-                    density_threshold: float | None = None) -> None:
+def recognize_class(
+        session: Session,
+        map_id: str | None = None,
+        surface_id: str | None = None,
+        pdb_id: str | None = None,
+        flg_xray: bool = False,
+        resolution: float | None = None,
+        density_threshold: float | None = None
+) -> None:
     """ Recognize extracted part of a density map.
+
+     This method creates intermediate mask object,
+        characterized by the "copy masked" suffix, which are removed at the end of the method.
     :param session: ChimeraX Session object
     :param map_id: id of entire density map in ChimeraX
     :param pdb_id: id of the PDB structure in ChimeraX
@@ -137,7 +145,7 @@ def recognize_class(session: Session, map_id: str | None = None, surface_id: str
     :param density_threshold: threshold value for the density map
     """
     if resolution is not None:
-        session.logger.warning("Resolution provided by hand. A recommended option is to use PDB file")
+        session.logger.warning("Resolution provided by hand. A recommended option is to use a PDB file with resolution information. See tutorial for details.")
 
     map_model, blob_model, cif_model = None, None, None
     if map_id is not None:
@@ -184,7 +192,7 @@ def recognize_class(session: Session, map_id: str | None = None, surface_id: str
         resolution = resolution_cif if resolution_cif is not None else resolution
 
     if resolution is None:
-        raise UserError("Could not find resolution.")  # probably add more informative message
+        raise UserError("Could not find resolution. Please make sure that it is either defined in the PDB file, or has been passed manually.")
     if map_model is None:
         raise UserError("Could not find density map. Please open density map or provide a valid density map id.")
     if blob_model is None:
@@ -198,9 +206,21 @@ def recognize_class(session: Session, map_id: str | None = None, surface_id: str
         blob_mask = mask(session, volumes=[map_model_ones], surfaces=[blob_model], full_map=True)[0]
         setattr(blob_mask.data, "file_header", map_model.data.file_header)
 
-        blob = cut_ligands_by_hand(map_model, blob_mask, resolution, flg_xray, density_threshold=density_threshold)
+        blob = cut_ligands_by_hand(
+            map_model=map_model,
+            mask_model=blob_mask,
+            resolution=resolution,
+            xray=flg_xray,
+            density_threshold=density_threshold
+        )
 
         validate_blob(session, blob)
+
+        # cleanup - remove the intermediate mask object
+        models = session.models.list()
+        for model in models:
+            if model.name.endswith("copy masked"):
+                run(session, f"close #{'.'.join(map(str, model.id))}", log=False)
 
 
 blob_recognize_desc = CmdDesc(
