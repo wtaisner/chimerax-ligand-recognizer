@@ -1,5 +1,5 @@
 <BundleInfo name="ChimeraX-LigandRecognizer"
-	    version="0.1" package="chimerax.ligand_recognizer"
+	    version="0.2" package="chimerax.ligand_recognizer"
   	    minSessionVersion="1" maxSessionVersion="1">
 
   <!-- Additional information about bundle source -->

@@ -224,7 +224,7 @@ def extract_ligand(
         cell_sampling (list): Cell sampling for the entire map.
         origin (np.ndarray): Origin of the map.
         ligand_coords (np.ndarray): Coordinates of the ligand.
-        xray (bool): whether the map is a xray map or not (if not it is assumed to be cryoem).
+        xray (bool): whether the map is an xray map or not (if not it is assumed to be cryoem).
         mask (np.ndarray): Mask of the ligand. If ligand
 
     Returns:
@@ -345,7 +345,7 @@ def cut_ligand_from_coords(
 
     if resolution is None:
         raise UserError(
-            "Could not find resolution. Please make sure that it is either defined in the PDB file, or has been passed manually.")
+            "Could not find resolution information in model. Please make sure that resolution is either defined in the PDB/mmCIF file, or has been passed as a parameter in the command.")
     unit_cell, map_array, cell_sampling, origin = read_map(map_model)
 
     if density_threshold is None:
