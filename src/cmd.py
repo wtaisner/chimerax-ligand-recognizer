@@ -165,7 +165,7 @@ def recognize_class(
         map_model = get_model(session, map_id)
         if not isinstance(map_model, Volume) or not (
                 map_model.opened_data_format and map_model.opened_data_format.name == 'CCP4 density map'):
-            raise UserError(f"Expected the id {map_id} to refer to CCP4 density map")
+            raise UserError(f"Expected the id {map_id} to refer to a CCP4 density map")
 
     if surface_id is not None:
         blob_model = get_model(session, surface_id)
@@ -176,7 +176,7 @@ def recognize_class(
         cif_model = get_model(session, pdb_id)
         if not isinstance(cif_model, AtomicStructure) or not (
                 cif_model.opened_data_format and (cif_model.opened_data_format.name == "mmCIF" or cif_model.opened_data_format.name == "PDB")):
-            raise UserError(f"Expected the id {pdb_id} to refer to PDB structure")
+            raise UserError(f"Expected the id {pdb_id} to refer to a PDB/mmCIF model.")
 
     if map_model is None or (cif_model is None and resolution is None):
         models = session.models.list()  # get all models in the session
@@ -184,7 +184,7 @@ def recognize_class(
         for model in models:
             if model.opened_data_format and model.opened_data_format.name == "CCP4 density map":  # Check if the model is a density map, hopefully.
                 if map_model is not None and map_id is None:
-                    raise UserError("Multiple density maps found in the session. Please provide id of the density map.")
+                    raise UserError("Multiple density maps found in the session. Please provide the id of the density map as a command parameter.")
                 if map_model is None and map_id is None:
                     map_model = model
 
@@ -193,7 +193,7 @@ def recognize_class(
                     # Check if there is more than one PDB structure in the session
                     if cif_model is not None and pdb_id:
                         raise UserError(
-                            "Multiple PDB structures found in the session. Please provide id of the PBD structure.")
+                            "Multiple PDB structures found in the session. Please provide id of the PBD/mmCIF model as a command parameter.")
                     if cif_model is None and pdb_id is None:
                         cif_model = model
 
@@ -206,9 +206,9 @@ def recognize_class(
 
     if resolution is None:
         raise UserError(
-            "Could not find resolution. Please make sure that it is either defined in the PDB file, or has been passed manually.")
+            "Could not find resolution information in the model. Please make sure that resolution is either defined in the PDB/mmCIF file, or has been passed as a parameter in the command.")
     if map_model is None:
-        raise UserError("Could not find density map. Please open density map or provide a valid density map id.")
+        raise UserError("Could not find density map. Please open a density map or provide a valid density map id as a command parameter.")
     if blob_model is None:
         raise UserError("Could not find surface. Please provide a valid surface id.")
 
@@ -263,13 +263,13 @@ def blob_autothreshold(session: Session, map_id: str | None = None, style: int =
         map_model = get_model(session, map_id)
         if not isinstance(map_model, Volume) or not (
                 map_model.opened_data_format and map_model.opened_data_format.name == 'CCP4 density map'):
-            raise UserError(f"Expected the id {map_id} to refer to CCP4 density map")
+            raise UserError(f"Expected the id {map_id} to refer to a CCP4 density map.")
     if map_model is None:
         models = session.models.list(type=Volume)  # get all Volumes in the session
         for model in models:
             if model.opened_data_format and model.opened_data_format.name == "CCP4 density map":  # Check if the model is a density map, hopefully.
                 if map_model is not None and map_id is None:
-                    raise UserError("Multiple density maps found in the session. Please provide id of the density map.")
+                    raise UserError("Multiple density maps found in the session. Please provide the id of the density map as a command parameter.")
                 if map_model is None and map_id is None:
                     map_model = model
 
@@ -284,7 +284,7 @@ def blob_autothreshold(session: Session, map_id: str | None = None, style: int =
     quantile_threshold = norm.cdf(density_std_threshold)
     density_threshold = np.quantile(map_array[value_mask], quantile_threshold)
     if style < 0 or style > 2:
-        raise UserError("Style must be 0, 1, or 2!")
+        raise UserError("Incorrect style number. Style must be 0, 1, or 2.")
 
     if style == 0:
         volume(session=session, volumes=[map_model], level=[[density_threshold]])
