@@ -1,10 +1,10 @@
-[![bioRxiv - Preprint](https://img.shields.io/badge/bioRxiv-Preprint-red)](https://www.biorxiv.org/content/10.1101/2024.08.27.610022)
+[![Bioinformatics - accepted](https://img.shields.io/badge/Article-green?label=Bioinformatics&labelColor=%23167da4)](https://doi.org/10.1093/bioinformatics/btae749)
 [![Streamlit - Demo](https://img.shields.io/badge/Streamlit-Demo-green)](https://ligands.cs.put.poznan.pl)
 
 # ChimeraX LigandRecognizer Bundle
 
 This bundle provides ChimeraX commands for recognizing ligands in cryoEM and X-ray crystallography maps using deep learning. The bundle is accompanying software to the paper "Ligand Identification in CryoEM and X-ray Maps Using Deep Learning" by Karolczak *et al.* To get more information on the reseach behind this tool you can:
-- read about the used model on [bioRxiv](https://www.biorxiv.org/content/10.1101/2024.08.27.610022);
+- read about the used model in [Bioinformatics](https://doi.org/10.1093/bioinformatics/btae749);
 - try the [Streamlit demo](https://ligands.cs.put.poznan.pl) to see the model in action;
 - find the pretrained model and experiment code at [this GitHub repository](https://github.com/jkarolczak/ligand-classification); 
 - get the datasets used for training and testing the model at [Zenodo](https://zenodo.org/records/10908325). 
@@ -43,8 +43,8 @@ This tool assumes, that both a .pdb/.cif (partial) model and a .ccp4 difference 
 
 The tool implements three basic commands:
 1. `blob autothreshold [map_id] [style] [density_std_threshold]`: set a surface-defining nthreshold for the map / volume and choose display options..
-2. `blob recognize [map_id] [surface_id] [pdb_id] [flg_xray] [density_threshold]`: tries to identify a ligand from a selected map fragment (surface).
-3. `blob validate res_id [map_id] [pdb_id] [flg_xray] [density_threshold]`: validates a previously modeled ligand at residue res_id.
+2. `blob recognize [map_id] [surface_id] [pdb_id] [flg_xray] [resolution] [density_threshold]`: tries to identify a ligand from a selected map fragment (surface).
+3. `blob validate res_id [map_id] [pdb_id] [flg_xray] [resolution] [density_threshold]`: validates a previously modeled ligand at residue res_id.
 All the parameters in brackets are optional and if they are not provided the command will use the currently active map, structure, surface, and assume that the map is a cryoEM map (xray False). The above three commands are aliases for `blobus validatus`, `blobus recognitus`, and `blobus autothresholdus` respectively.
     
 Examples:
@@ -71,11 +71,12 @@ You can also take a look at the step-by-step guide on how to use the tool in the
 
 ## Citation
 ```bibtex
-@article {LigandDeepLearning,
-	author = {Karolczak, Jacek and Przyby{\l}owska, Anna and Szewczyk, Konrad and Taisner, Witold and Heumann, John M. and Stowell, Michael H.B. and Nowicki, Micha{\l} and Brzezinski, Dariusz},
-	title = {Ligand Identification using Deep Learning},
-	year = {2024},
-	doi = {10.1101/2024.08.27.610022},
-	journal = {bioRxiv}
+@article{LigandsDeepLearning,
+    author = {Karolczak, Jacek and Przybyłowska, Anna and Szewczyk, Konrad and Taisner, Witold and Heumann, John M and Stowell, Michael H B and Nowicki, Michał and Brzezinski, Dariusz},
+    title = {Ligand Identification in CryoEM and X-ray Maps Using Deep Learning},
+    journal = {Bioinformatics},
+    pages = {btae749},
+    year = {2024},
+    doi = {10.1093/bioinformatics/btae749}
 }
 ```

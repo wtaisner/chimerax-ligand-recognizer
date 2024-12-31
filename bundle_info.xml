@@ -1,5 +1,5 @@
 <BundleInfo name="ChimeraX-LigandRecognizer"
-	    version="0.1" package="chimerax.ligand_recognizer"
+	    version="0.2" package="chimerax.ligand_recognizer"
   	    minSessionVersion="1" maxSessionVersion="1">
 
   <!-- Additional information about bundle source -->
@@ -11,7 +11,7 @@
   <Synopsis>This tool uses a PDB model (.pdb or .cif) and corresponding density map (.cpp4) to validate/identify ligands.</Synopsis>
   <Description>
     This tool implements the functionality proposed in the publication "Ligand Identification in CryoEM and X-ray Maps Using Deep Learning"
-    (https://www.biorxiv.org/content/10.1101/2024.08.27.610022) that uses a deep learning model to predict ligand types. 
+    (https://doi.org/10.1093/bioinformatics/btae749) that uses a deep learning model to predict ligand types.
     The prediction is performed on a server (https://ligands.cs.put.poznan.pl/) based on a preprocessed map fragment sent from ChimeraX.
 
     Usage:

@@ -1,8 +1,10 @@
 """Adapted from https://github.com/dabrze/cryo-em-ligand-cutter/tree/main"""
+import warnings
 from math import sqrt
 
 import numpy as np
 import scipy as sp  # type: ignore
+from chimerax.core.errors import UserError
 from scipy import signal
 from scipy.stats import norm  # type: ignore
 
@@ -216,8 +218,6 @@ def extract_ligand(
         atom_radius (float): Radius of the atoms in the ligand.
         target_voxel_size (float): Target voxel size for the resampled blob.
         resolution (float): Resolution of the map.
-        res_cov_threshold (float): Minimum coverage threshold for the model.
-        blob_cov_threshold (float): Minimum coverage threshold for the blob.
         padding (int): Padding size for the blob.
         unit_cell (np.ndarray): Unit cell dimensions.
         map_array (np.ndarray): Map array.
@@ -225,12 +225,15 @@ def extract_ligand(
         origin (np.ndarray): Origin of the map.
         ligand_coords (np.ndarray): Coordinates of the ligand.
         xray (bool): whether the map is an xray map or not (if not it is assumed to be cryoem).
+        mask (np.ndarray): Mask of the ligand. If ligand
 
     Returns:
         np.ndarray: cut ligand or None
     """
     if ligand_coords is not None:
         mask = get_ligand_mask(atom_radius, unit_cell, map_array, origin, ligand_coords)
+    if mask is None:
+        raise ValueError("Mask is not provided. Provide either ligand coordinates or mask")
     min_x, max_x, min_y, max_y, min_z, max_z = get_mask_bounding_box(mask)
 
     blob = map_array * mask
@@ -246,6 +249,14 @@ def extract_ligand(
     if blob_volume >= get_sphere_volume(min_blob_radius):
 
         if not xray:
+            # handle resolution mapping for cryoem maps
+            if resolution > 4.0:
+                raise UserError("Map resolution > 4.0 Å. LigandRecognizer supports only maps with resolution <= 4.0 Å.")
+            if resolution < 1.0:
+                resolution = 1.0
+
+            resolution = round(resolution, 1)
+
             blob = blob * (MAP_VALUE_MAPPER[resolution] / blob[blob > 0].min())
 
         return blob
@@ -299,7 +310,7 @@ def em_stats(cif_model):
 
     if resolution is not None:
         if resolution > 4.0:
-            resolution = 4.0
+            raise UserError("Map resolution > 4.0 Å. LigandRecognizer supports only maps with resolution <= 4.0 Å.")
         elif resolution < 1.0:
             resolution = 1.0
 
@@ -324,12 +335,17 @@ def cut_ligand_from_coords(
         target_voxel_size=0.2,
         padding=2,
         density_threshold: float | None = None,
+        resolution: float | None = None,
 ):
-    ligand_coords, resolution, num_particles = extract_ligand_coords(cif_model, residue)
+    if resolution is None:
+        ligand_coords, resolution, _ = extract_ligand_coords(cif_model, residue)
+    else:
+        ligand_coords, _, _ = extract_ligand_coords(cif_model, residue)
+        resolution = round(resolution, 1)
 
-    if resolution is None or num_particles is None:
-        resolution = 3.0
-
+    if resolution is None:
+        raise UserError(
+            "Could not find resolution information in model. Please make sure that resolution is either defined in the PDB/mmCIF file, or has been passed as a parameter in the command.")
     unit_cell, map_array, cell_sampling, origin = read_map(map_model)
 
     if density_threshold is None:
@@ -376,7 +392,7 @@ def cut_ligands_by_hand(
     :param map_model: full density map
     :param mask_model: mask corresponding to desired part of density (blob)
     :param resolution: resolution of the map
-    :param xray: whether the map is an xray map or not (if not it is assumed to be cryoem)
+    :param xray: whether the map is a xray map or not (if not it is assumed to be cryoem)
     :param density_std_threshold:
     :param min_blob_radius:
     :param target_voxel_size:
